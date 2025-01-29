@@ -27,9 +27,9 @@ export const sendEmail = async (email, subject, html) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log("Email đã được gửi:", info.messageId);
+        console.log("[NODEMAILER]: Email đã được gửi:", info.messageId);
     } catch (error) {
-        console.error("Lỗi khi gửi email:", error);
+        console.error("[NODEMAILER]: Lỗi khi gửi email:", error);
         throw new Error("Không thể gửi email");
     }
 };

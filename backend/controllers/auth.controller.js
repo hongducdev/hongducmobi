@@ -61,6 +61,7 @@ export const register = async (req, res) => {
             }
         }
     } catch (error) {
+        console.log(`[ERROR]: Error registering user: ${error.message}`);
         res.status(500).json({
             message: error.message,
         });
@@ -88,6 +89,7 @@ export const verifyToken = async (req, res) => {
             message: "Xác minh thành công",
         });
     } catch (error) {
+        console.log(`[ERROR]: Error verifying token: ${error.message}`);
         res.status(500).json({
             message: error.message,
         });
@@ -128,6 +130,7 @@ export const resendToken = async (req, res) => {
             message: "Vui lòng kiểm tra email để xác minh tài khoản!",
         });
     } catch (error) {
+        console.log(`[ERROR]: Error resending token: ${error.message}`);
         res.status(500).json({
             message: error.message,
         });
@@ -195,6 +198,7 @@ export const login = async (req, res) => {
             });
         }
     } catch (error) {
+        console.log(`[ERROR]: Error logging in user: ${error.message}`);
         res.status(500).json({
             message: error.message,
         });
@@ -214,6 +218,7 @@ export const logout = async (req, res) => {
             message: "Đã đăng xuất thành công!",
         })
     } catch (error) {
+        console.log(`[ERROR]: Error logging out user: ${error.message}`);
         res.status(500).json({
             message: error.message,
         })
@@ -253,6 +258,7 @@ export const refreshToken = async (req, res) => {
             messsage: "Đã tạo mới accessToken thành công!",
         })
     } catch (error) {
+        console.log(`[ERROR]: Error refreshing token: ${error.message}`);
         res.status(500).json({
             message: error.message,
         })
