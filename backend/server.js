@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 // routes
 import authRoutes from "./routes/auth.route.js";
@@ -15,6 +16,7 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
     res.send("Hello World!");
