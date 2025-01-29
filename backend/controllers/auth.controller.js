@@ -1,6 +1,120 @@
-export const register = (req, res) => {
-    res.send("register");
+import { sendEmail } from "../lib/nodemailer.js";
+import User from "../models/user.model.js";
+
+export const register = async (req, res) => {
+    const { name, email, password } = req.body;
+    try {
+        const userExits = await User.findOne({ email });
+        if (userExits) {
+            res.status(400).json({
+                message: "Nguời dùng đã tồn tại!",
+            });
+        } else {
+            const user = await User.create({ name, email, password });
+            if (user) {
+                const token = await user.generateToken();
+                await sendEmail(
+                    email,
+                    "Xác minh tài khoản",
+                    `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h1 style="color: #333; margin-bottom: 20px;">Xác minh tài khoản của bạn</h1>
+                        <p style="color: #666; font-size: 16px; line-height: 1.5;">Cảm ơn bạn đã đăng ký tài khoản. Để hoàn tất quá trình đăng ký, vui lòng sử dụng mã xác minh dưới đây:</p>
+                        <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0; border: 2px dashed #4CAF50;">
+                            <span style="font-size: 24px; font-weight: bold; color: #4CAF50; letter-spacing: 3px;">${token}</span>
+                        </div>
+                        <p style="color: #ff6b6b; font-size: 14px; margin-top: 20px;">
+                            ⏰ Lưu ý: Mã xác minh này chỉ có hiệu lực trong vòng 15 phút.
+                        </p>
+                        <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                            Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.
+                        </p>
+                    </div>
+                </div>`
+                );
+
+                res.status(200).json({
+                    message: "Vui lòng kiểm tra email để xác minh tài khoản!",
+                });
+            } else {
+                res.status(500).json({
+                    message: "Đăng ký tài khoản thất bại",
+                });
+            }
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
 };
+
+export const verifyToken = async (req, res) => {
+    const { token, email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({
+                message: "Email không hợp lệ",
+            });
+        }
+
+        const userVerified = await user.verifyToken(token);
+        if (!userVerified) {
+            return res.status(400).json({
+                message: "Mã xác minh không hợp lệ",
+            });
+        }
+
+        res.status(200).json({
+            message: "Xác minh thành công",
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        })
+    }
+};
+
+export const resendToken = async (req, res) => {
+    const { email } = req.body;
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({
+                message: "Email không hợp lệ",
+            });
+        }
+
+        const token = await user.generateToken();
+        await sendEmail(
+            email,
+            "Xác minh tài khoản",
+            `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h1 style="color: #333; margin-bottom: 20px;">Xác minh tài khoản của bạn</h1>
+                        <p style="color: #666; font-size: 16px; line-height: 1.5;">Cảm ơn bạn đã đăng ký tài khoản. Để hoàn tất quá trình đăng ký, vui lòng sử dụng mã xác minh dưới đây:</p>
+                        <div style="background-color: #fff; padding: 15px; border-radius: 5px; margin: 20px 0; border: 2px dashed #4CAF50;">
+                            <span style="font-size: 24px; font-weight: bold; color: #4CAF50; letter-spacing: 3px;">${token}</span>
+                        </div>
+                        <p style="color: #ff6b6b; font-size: 14px; margin-top: 20px;">
+                            ⏰ Lưu ý: Mã xác minh này chỉ có hiệu lực trong vòng 15 phút.
+                        </p>
+                        <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                            Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.
+                        </p>
+                    </div>
+                </div>`
+        );
+        res.status(200).json({
+            message: "Vui lòng kiểm tra email để xác minh tài khoản!",
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+}
 
 export const login = (req, res) => {
     res.send("login");
