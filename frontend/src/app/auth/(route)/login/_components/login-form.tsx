@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -22,8 +21,11 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
+import axios from "@/lib/axios";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
     email: z.string().email({
@@ -38,6 +40,7 @@ const LoginForm = ({
     className,
     ...props
 }: React.ComponentPropsWithoutRef<"div">) => {
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,7 +49,46 @@ const LoginForm = ({
             password: "",
         },
     });
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {};
+    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        setIsLoading(true);
+        try {
+            const { email, password } = values;
+            const response = await axios.post("/auth/login", {
+                email,
+                password,
+            });
+
+            if (response.status !== 200) {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description: response.data.message,
+                });
+            }
+
+            router.push("/");
+        } catch (error: any) {
+            if (error.response) {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description:
+                        error.response.data.message || "Đăng nhập thất bại",
+                });
+            } else if (error.request) {
+                toast({
+                    title: "Lỗi kết nối!",
+                    description:
+                        "Không thể kết nối tới máy chủ. Vui lòng thử lại!",
+                });
+            } else {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description: error.message || "Đăng nhập thất bại",
+                });
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
@@ -100,13 +142,20 @@ const LoginForm = ({
                                 )}
                             />
                             <Button type="submit" className="w-full">
-                                Đăng nhập
+                                {isLoading ? (
+                                    <Loader className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    "Đăng nhập"
+                                )}
                             </Button>
                         </form>
                     </Form>
                     <div className="mt-4 text-center text-sm">
                         Không có tài khoản?{" "}
-                        <a href="/auth/register" className="underline underline-offset-4">
+                        <a
+                            href="/auth/register"
+                            className="underline underline-offset-4"
+                        >
                             Đăng ký
                         </a>
                     </div>
