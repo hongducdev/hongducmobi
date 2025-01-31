@@ -78,14 +78,14 @@ userSchema.methods.comparePassword = async function (password) {
 };
 
 userSchema.methods.generateToken = async function () {
-    const rawToken = Math.floor(100000 + Math.random() * 900000).toString();
-    const hashedToken = await bcrypt.hash(rawToken, 10);
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
 
-    this.token = hashedToken;
+
+    this.token = token;
     this.tokenExp = Date.now() + 30 * 60 * 1000;
     await this.save();
 
-    return rawToken;
+    return token;
 }
 
 userSchema.methods.verifyToken = async function (token) {
@@ -93,7 +93,7 @@ userSchema.methods.verifyToken = async function (token) {
         throw new Error("Token đã hết hạn");
     }
 
-    const isMatch = await bcrypt.compare(token, this.token);
+    const isMatch = await token === this.token;
     if (!isMatch) {
         return false;
     }

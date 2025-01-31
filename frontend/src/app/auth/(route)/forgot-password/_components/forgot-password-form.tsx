@@ -25,37 +25,30 @@ import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
     email: z.string().email({
         message: "Email không hợp lệ",
     }),
-    password: z.string().min(6, {
-        message: "Mật khẩu phải có ít nhất 6 ký tự",
-    }),
 });
 
-const LoginForm = ({
+const ForgotPasswordForm = ({
     className,
     ...props
 }: React.ComponentPropsWithoutRef<"div">) => {
-    const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
-            password: "",
         },
     });
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true);
         try {
-            const { email, password } = values;
-            const response = await axios.post("/auth/login", {
+            const { email } = values;
+            const response = await axios.post("/auth/forgot-password", {
                 email,
-                password,
             });
 
             if (response.status !== 200) {
@@ -65,7 +58,10 @@ const LoginForm = ({
                 });
             }
 
-            router.push("/");
+            toast({
+                title: "Thành công!",
+                description: response.data.message,
+            });
         } catch (error: any) {
             if (error.response) {
                 toast({
@@ -93,9 +89,9 @@ const LoginForm = ({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+                    <CardTitle className="text-2xl">Quên mật khẩu</CardTitle>
                     <CardDescription>
-                        Nhập thông tin tài khoản để đăng nhập
+                        Nhập thông tin để đặt lại mật khẩu
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -120,49 +116,19 @@ const LoginForm = ({
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center">
-                                            <FormLabel>Mật khẩu</FormLabel>
-                                            <a
-                                                className="ml-auto inline-block text-sm underline-offset-4 hover:underline cursor-pointer"
-                                                href="/auth/forgot-password"
-                                            >
-                                                Quên mật khẩu?
-                                            </a>
-                                        </div>
-                                        <FormControl>
-                                            <Input type="password" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
                             <Button type="submit" className="w-full">
                                 {isLoading ? (
                                     <Loader className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    "Đăng nhập"
+                                    "Quên mật khẩu"
                                 )}
                             </Button>
                         </form>
                     </Form>
-                    <div className="mt-4 text-center text-sm">
-                        Không có tài khoản?{" "}
-                        <a
-                            href="/auth/register"
-                            className="underline underline-offset-4"
-                        >
-                            Đăng ký
-                        </a>
-                    </div>
                 </CardContent>
             </Card>
         </div>
     );
 };
 
-export default LoginForm;
+export default ForgotPasswordForm;

@@ -20,7 +20,11 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+    InputOTP,
+    InputOTPGroup,
+    InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
@@ -28,34 +32,31 @@ import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
-    email: z.string().email({
-        message: "Email không hợp lệ",
-    }),
-    password: z.string().min(6, {
-        message: "Mật khẩu phải có ít nhất 6 ký tự",
+    token: z.string().min(6, {
+        message: "Mã xác minh phải có ít nhất 6 ký tự",
     }),
 });
 
-const LoginForm = ({
+const VerifyForm = ({
+    email,
     className,
     ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+}: { email: string } & React.ComponentPropsWithoutRef<"div">) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
-            password: "",
+            token: "",
         },
     });
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true);
         try {
-            const { email, password } = values;
-            const response = await axios.post("/auth/login", {
+            const { token } = values;
+            const response = await axios.post("/auth/verify", {
                 email,
-                password,
+                token,
             });
 
             if (response.status !== 200) {
@@ -65,7 +66,11 @@ const LoginForm = ({
                 });
             }
 
-            router.push("/");
+            toast({
+                title: "Thành công!",
+                description: response.data.message,
+            });
+            router.push("/auth/login");
         } catch (error: any) {
             if (error.response) {
                 toast({
@@ -89,13 +94,51 @@ const LoginForm = ({
             setIsLoading(false);
         }
     };
+    const resendToken = async () => {
+        try {
+            const response = await axios.post("/auth/resend", {
+                email,
+            });
+
+            if (response.status !== 200) {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description: response.data.message,
+                });
+            }
+
+            toast({
+                title: "Thành công!",
+                description: response.data.message,
+            });
+        } catch (error: any) {
+            if (error.response) {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description:
+                        error.response.data.message || "Đăng nhập thất bại",
+                });
+            } else if (error.request) {
+                toast({
+                    title: "Lỗi kết nối!",
+                    description:
+                        "Không thể kết nối tới máy chủ. Vui lòng thử lại!",
+                });
+            } else {
+                toast({
+                    title: "Có lỗi xảy ra!",
+                    description: error.message || "Đăng nhập thất bại",
+                });
+            }
+        }
+    };
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+                    <CardTitle className="text-2xl">Xác minh</CardTitle>
                     <CardDescription>
-                        Nhập thông tin tài khoản để đăng nhập
+                        Nhập mã xác minh được gửi đến email
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -106,36 +149,31 @@ const LoginForm = ({
                         >
                             <FormField
                                 control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Email</FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="email@example.com"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
+                                name="token"
                                 render={({ field }) => (
                                     <FormItem>
                                         <div className="flex items-center">
-                                            <FormLabel>Mật khẩu</FormLabel>
-                                            <a
+                                            <FormLabel>Mã xác minh</FormLabel>
+                                            <span
                                                 className="ml-auto inline-block text-sm underline-offset-4 hover:underline cursor-pointer"
-                                                href="/auth/forgot-password"
+                                                onClick={() => {
+                                                    resendToken();
+                                                }}
                                             >
-                                                Quên mật khẩu?
-                                            </a>
+                                                Gửi lại
+                                            </span>
                                         </div>
                                         <FormControl>
-                                            <Input type="password" {...field} />
+                                            <InputOTP maxLength={6} {...field}>
+                                                <InputOTPGroup>
+                                                    <InputOTPSlot index={0} />
+                                                    <InputOTPSlot index={1} />
+                                                    <InputOTPSlot index={2} />
+                                                    <InputOTPSlot index={3} />
+                                                    <InputOTPSlot index={4} />
+                                                    <InputOTPSlot index={5} />
+                                                </InputOTPGroup>
+                                            </InputOTP>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -145,18 +183,18 @@ const LoginForm = ({
                                 {isLoading ? (
                                     <Loader className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    "Đăng nhập"
+                                    "Xác minh"
                                 )}
                             </Button>
                         </form>
                     </Form>
                     <div className="mt-4 text-center text-sm">
-                        Không có tài khoản?{" "}
+                        Đã có tài khoản{" "}
                         <a
-                            href="/auth/register"
+                            href="/auth/login"
                             className="underline underline-offset-4"
                         >
-                            Đăng ký
+                            Đăng nhập
                         </a>
                     </div>
                 </CardContent>
@@ -165,4 +203,4 @@ const LoginForm = ({
     );
 };
 
-export default LoginForm;
+export default VerifyForm;

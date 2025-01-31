@@ -2,6 +2,7 @@ import { sendEmail } from "../lib/nodemailer.js";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { redis } from "../lib/redis.js";
+import bcrypt from "bcryptjs";
 
 const generateTokens = async (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
@@ -185,7 +186,9 @@ export const login = async (req, res) => {
             }
 
             // auth
-            const { refreshToken, accessToken } = await generateTokens(user._id);
+            const { refreshToken, accessToken } = await generateTokens(
+                user._id
+            );
             await storeRefreshToken(user._id, refreshToken);
 
             setCookies(res, accessToken, refreshToken);
@@ -208,67 +211,149 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        if(refreshToken) {
-            const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        if (refreshToken) {
+            const decoded = jwt.verify(
+                refreshToken,
+                process.env.REFRESH_TOKEN_SECRET
+            );
             await redis.del(`refresh_token:${decoded.userId}`);
         }
         res.clearCookie("refreshToken");
         res.clearCookie("accessToken");
         res.status(200).json({
             message: "Đã đăng xuất thành công!",
-        })
+        });
     } catch (error) {
         console.log(`[ERROR]: Error logging out user: ${error.message}`);
         res.status(500).json({
             message: error.message,
-        })
+        });
     }
 };
 
 export const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        if(!refreshToken) {
+        if (!refreshToken) {
             return res.status(401).json({
                 message: "Vui lòng đăng nhập lại!",
-            })
+            });
         }
 
-        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        );
         const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
 
-        if(!storedToken || storedToken !== refreshToken) {
+        if (!storedToken || storedToken !== refreshToken) {
             return res.status(401).json({
                 message: "Vui lòng đăng nhập lại!",
-            })
+            });
         }
 
-        const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: "15m",
-        });
+        const accessToken = jwt.sign(
+            { userId: decoded.userId },
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+                expiresIn: "15m",
+            }
+        );
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             maxAge: 15 * 60 * 1000,
-        })
+        });
 
         res.json({
             messsage: "Đã tạo mới accessToken thành công!",
-        })
+        });
     } catch (error) {
         console.log(`[ERROR]: Error refreshing token: ${error.message}`);
         res.status(500).json({
             message: error.message,
-        })
+        });
     }
-}
+};
 
 export const getProfile = async (req, res) => {
     try {
         res.json(req.user);
     } catch (error) {
+        console.log(`[ERROR]: Error getting profile: ${error.message}`);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const sendTokenForgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ message: "Email không tìm thấy" });
+        }
+
+        const resetToken = await user.generateToken();
+        const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+
+        await sendEmail(
+            email,
+            "Khôi phục mật khẩu",
+            `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h1 style="color: #333; margin-bottom: 20px;">Đặt lại mật khẩu</h1>
+                        <p style="color: #666; font-size: 16px; line-height: 1.5;">Bạn nhận được email này vì chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.</p>
+                        <a href="${resetUrl}" style="background-color: #4CAF50; color: #fff; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; margin-top: 20px;">Đặt lại mật khẩu</a>
+                        <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                            Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+                        </p>
+                    </div>
+                </div>`
+        );
+
+        res.json({ message: "Vui lòng kiểm tra email để khôi phục mật khẩu" });
+
+    } catch (error) {
+        console.log(`[ERROR]: Error forgot password: ${error.message}`);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        const user = await User.findOne({ token });
+        if (!user) {
+            return res.status(404).json({ message: "Token không hợp lệ" });
+        }
+
+        if (user.tokenExp < Date.now()) {
+            return res.status(400).json({ message: "Token đã hết hạn" });
+        }
+
+        if (password.length < 6) {
+            return res
+                .status(400)
+                .json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        user.password = hashedPassword;
+        user.token = "";
+        user.tokenExp = 0;
+        await user.save();
+
+        res.status(200).json({
+            message: "Mật khẩu đã được cập nhật thành công",
+        });
+    } catch (error) {
+        console.error(`[ERROR]: Error resetting password: ${error.message}`);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };

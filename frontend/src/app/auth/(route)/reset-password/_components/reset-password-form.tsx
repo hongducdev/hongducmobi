@@ -27,34 +27,40 @@ import axios from "@/lib/axios";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const formSchema = z.object({
-    email: z.string().email({
-        message: "Email không hợp lệ",
-    }),
-    password: z.string().min(6, {
-        message: "Mật khẩu phải có ít nhất 6 ký tự",
-    }),
-});
+const formSchema = z
+    .object({
+        password: z.string().min(6, {
+            message: "Mật khẩu phải có ít nhất 6 ký tự",
+        }),
+        confirmPassword: z.string().min(6, {
+            message: "Mật khẩu phải có ít nhất 6 ký tự",
+        }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Mật khóa không khớp nhau",
+        path: ["confirmPassword"],
+    });
 
-const LoginForm = ({
+const ResetPasswordForm = ({
+    token,
     className,
     ...props
-}: React.ComponentPropsWithoutRef<"div">) => {
+}: { token: string } & React.ComponentPropsWithoutRef<"div">) => {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
             password: "",
+            confirmPassword: "",
         },
     });
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true);
         try {
-            const { email, password } = values;
-            const response = await axios.post("/auth/login", {
-                email,
+            const { password } = values;
+            const response = await axios.post("/auth/reset-password", {
+                token,
                 password,
             });
 
@@ -65,7 +71,11 @@ const LoginForm = ({
                 });
             }
 
-            router.push("/");
+            toast({
+                title: "Thành công!",
+                description: response.data.message,
+            });
+            router.push("/auth/login");
         } catch (error: any) {
             if (error.response) {
                 toast({
@@ -93,9 +103,9 @@ const LoginForm = ({
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">Đăng nhập</CardTitle>
+                    <CardTitle className="text-2xl">Đặt lại mật khẩu</CardTitle>
                     <CardDescription>
-                        Nhập thông tin tài khoản để đăng nhập
+                        Đặt lại mật khẩu cho tài khoản
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -106,15 +116,12 @@ const LoginForm = ({
                         >
                             <FormField
                                 control={form.control}
-                                name="email"
+                                name="password"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Email</FormLabel>
+                                        <FormLabel>Mật khẩu</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                placeholder="email@example.com"
-                                                {...field}
-                                            />
+                                            <Input {...field} type="password" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -122,18 +129,10 @@ const LoginForm = ({
                             />
                             <FormField
                                 control={form.control}
-                                name="password"
+                                name="confirmPassword"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <div className="flex items-center">
-                                            <FormLabel>Mật khẩu</FormLabel>
-                                            <a
-                                                className="ml-auto inline-block text-sm underline-offset-4 hover:underline cursor-pointer"
-                                                href="/auth/forgot-password"
-                                            >
-                                                Quên mật khẩu?
-                                            </a>
-                                        </div>
+                                        <FormLabel>Nhập lại mật khẩu</FormLabel>
                                         <FormControl>
                                             <Input type="password" {...field} />
                                         </FormControl>
@@ -145,24 +144,15 @@ const LoginForm = ({
                                 {isLoading ? (
                                     <Loader className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    "Đăng nhập"
+                                    "Đặt lại mật khẩu"
                                 )}
                             </Button>
                         </form>
                     </Form>
-                    <div className="mt-4 text-center text-sm">
-                        Không có tài khoản?{" "}
-                        <a
-                            href="/auth/register"
-                            className="underline underline-offset-4"
-                        >
-                            Đăng ký
-                        </a>
-                    </div>
                 </CardContent>
             </Card>
         </div>
     );
 };
 
-export default LoginForm;
+export default ResetPasswordForm;
