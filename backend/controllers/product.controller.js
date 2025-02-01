@@ -44,9 +44,17 @@ export const getFeaturedProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
     try {
-        const { name, slug, description, price, images, category, isFeatured } =
-            req.body;
+        const {
+            name,
+            slug,
+            description,
+            price,
+            images,
+            category,
+            quantity,
+        } = req.body;
 
+        console.log(req.body);
         if (!images || !Array.isArray(images) || images.length === 0) {
             return res
                 .status(400)
@@ -55,10 +63,17 @@ export const createProduct = async (req, res) => {
 
         const uploadedImages = await Promise.all(
             images.map(async (image) => {
-                const result = await cloudinary.uploader.upload(image, {
-                    folder: "Products",
-                });
-                return result.secure_url;
+                try {
+                    const result = await cloudinary.uploader.upload(image, {
+                        folder: "Products",
+                    });
+                    return result.secure_url;
+                } catch (error) {
+                    console.error(
+                        `[ERROR]: Error uploading image to Cloudinary: ${error.message}`
+                    );
+                    throw error;
+                }
             })
         );
 
@@ -69,10 +84,11 @@ export const createProduct = async (req, res) => {
             price,
             images: uploadedImages,
             category,
+            quantity,
             isFeatured,
         });
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Sản phẩm được tạo thành công",
             product,
         });

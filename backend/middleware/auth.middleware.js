@@ -45,7 +45,7 @@ export const protectRoute = async (req, res, next) => {
 };
 
 export const adminRoute = (req, res, next) => {
-    if (req.user.role !== "admin") {
+    if (req.user.role !== "ADMIN") {
         return res.status(403).json({
             message: "Quyền truy cập bị từ chối - Chỉ cho admin!",
         });

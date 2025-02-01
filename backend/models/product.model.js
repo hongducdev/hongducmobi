@@ -17,12 +17,16 @@ const productSchema = new mongoose.Schema(
         },
         price: {
             type: Number,
-            min: 0,
+            min: 1000,
             required: [true, "Giá sản phẩm là bắt buộc"],
         },
         images: {
             type: [String],
             required: [true, "Hình ảnh sản phẩm là bắt buộc"],
+        },
+        quantity: {
+            type: Number,
+            default: 0,
         },
         category: {
             type: String,
