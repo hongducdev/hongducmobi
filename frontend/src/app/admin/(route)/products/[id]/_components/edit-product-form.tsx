@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import slugify from "slugify";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,10 +35,10 @@ const formSchema = z.object({
         message: "Mô tả sản phẩm phải có ít nhất 2 ký tự",
     }),
     price: z.number().gte(1000, {
-        message: "Giá sản phẩm phải có ít nhất 1000",
+        message: "Giá sản phẩm phải có ít nhất 1000",
     }),
     quantity: z.number().gte(0, {
-        message: "Số lượng sản phẩm phải có ít nhất 0",
+        message: "Số lượng sản phẩm phải có ít nhất 0",
     }),
     images: z.array(z.string()).min(1, {
         message: "Cần ít nhất một hình ảnh",
@@ -45,18 +46,25 @@ const formSchema = z.object({
     category: z.string(),
 });
 
-const CreateProductForm = () => {
+interface EditProductFormProps {
+    initialData: any;
+    productId: string;
+}
+
+const EditProductForm = ({ initialData, productId }: EditProductFormProps) => {
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            slug: "",
-            description: "",
-            price: 1000,
-            quantity: 0,
-            images: [],
-            category: "",
+            name: initialData.name,
+            slug: initialData.slug,
+            description: initialData.description,
+            price: initialData.price,
+            quantity: initialData.quantity,
+            images: initialData.images,
+            category: initialData.category,
         },
     });
 
@@ -88,37 +96,41 @@ const CreateProductForm = () => {
         setIsLoading(true);
 
         try {
-            const base64Images = await Promise.all(
-                values.images.map(async (url: string) => {
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    return convertBlobToBase64(blob);
+            // Chỉ chuyển đổi những hình ảnh mới (không phải URL) sang base64
+            const processedImages = await Promise.all(
+                values.images.map(async (image: string) => {
+                    if (
+                        image.startsWith("data:") ||
+                        image.startsWith("blob:")
+                    ) {
+                        const response = await fetch(image);
+                        const blob = await response.blob();
+                        return convertBlobToBase64(blob);
+                    }
+                    return image; // Giữ nguyên URL của ảnh cũ
                 })
             );
 
-            const response = await axios.post("/products/create", {
+            const response = await axios.put(`/products/${productId}`, {
                 ...values,
-                images: base64Images,
+                images: processedImages,
             });
 
-            if (response.status !== 200) {
-                toast({
-                    title: "Có lỗi xảy ra!",
-                    description: response.data.message,
-                });
-            } else {
+            if (response.status === 200) {
                 toast({
                     title: "Thành công!",
-                    description: response.data.message,
+                    description: "Cập nhật sản phẩm thành công",
                 });
-                form.reset();
+                router.refresh();
+                router.push("/admin/products");
             }
         } catch (error: any) {
             if (error.response) {
                 toast({
                     title: "Có lỗi xảy ra!",
                     description:
-                        error.response.data.message || "Tạo sản phẩm thất bại",
+                        error.response.data.message ||
+                        "Cập nhật sản phẩm thất bại",
                 });
             } else if (error.request) {
                 toast({
@@ -129,7 +141,7 @@ const CreateProductForm = () => {
             } else {
                 toast({
                     title: "Có lỗi xảy ra!",
-                    description: error.message || "Tạo sản phẩm thất bại",
+                    description: error.message || "Cập nhật sản phẩm thất bại",
                 });
             }
         } finally {
@@ -148,10 +160,7 @@ const CreateProductForm = () => {
                             <FormItem>
                                 <FormLabel>Tên sản phẩm</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        placeholder="Điện thoại Samsung S25 Ultra"
-                                        {...field}
-                                    />
+                                    <Input {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -164,10 +173,7 @@ const CreateProductForm = () => {
                             <FormItem>
                                 <FormLabel>Slug sản phẩm</FormLabel>
                                 <FormControl>
-                                    <Input
-                                        placeholder="dien_thoai_samsung_s25_ultra"
-                                        {...field}
-                                    />
+                                    <Input {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -181,11 +187,7 @@ const CreateProductForm = () => {
                         <FormItem>
                             <FormLabel>Mô tả sản phẩm</FormLabel>
                             <FormControl>
-                                <Textarea
-                                    rows={12}
-                                    placeholder="Mô tả sản phẩm"
-                                    {...field}
-                                />
+                                <Textarea rows={12} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -196,7 +198,7 @@ const CreateProductForm = () => {
                     name="price"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Giá</FormLabel>
+                            <FormLabel>Giá</FormLabel>
                             <FormControl>
                                 <Input
                                     type="number"
@@ -206,7 +208,7 @@ const CreateProductForm = () => {
                                     }
                                 />
                             </FormControl>
-                            <FormDescription>Đơn vị: Đồng</FormDescription>
+                            <FormDescription>Đơn vị: Đồng</FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -260,16 +262,25 @@ const CreateProductForm = () => {
                         </FormItem>
                     )}
                 />
-                <Button type="submit">
-                    {isLoading ? (
-                        <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        "Tạo sản phẩm"
-                    )}
-                </Button>
+                <div className="flex items-center gap-x-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push("/admin/products")}
+                    >
+                        Hủy
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                        {isLoading ? (
+                            <Loader className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            "Cập nhật sản phẩm"
+                        )}
+                    </Button>
+                </div>
             </form>
         </Form>
     );
 };
 
-export default CreateProductForm;
+export default EditProductForm;

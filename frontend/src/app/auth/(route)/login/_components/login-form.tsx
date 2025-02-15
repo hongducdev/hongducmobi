@@ -26,6 +26,7 @@ import { toast } from "@/hooks/use-toast";
 import axios from "@/lib/axios";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/app/stores/useUserStore";
 
 const formSchema = z.object({
     email: z.string().email({
@@ -64,6 +65,9 @@ const LoginForm = ({
                     description: response.data.message,
                 });
             }
+
+            // set user to store
+            useUserStore.getState().setUser(response.data);
 
             router.push("/");
         } catch (error: any) {

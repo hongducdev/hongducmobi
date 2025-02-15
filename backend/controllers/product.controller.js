@@ -4,6 +4,10 @@ import Product from "../models/product.model.js";
 
 export const getAllProducts = async (req, res) => {
     try {
+        const products = await Product.find({
+            isDeleted: false,
+        });
+        res.json(products);
     } catch (error) {
         console.log(`[ERROR]: Error getting all products: ${error.message}`);
         res.status(500).json({
@@ -44,17 +48,9 @@ export const getFeaturedProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
     try {
-        const {
-            name,
-            slug,
-            description,
-            price,
-            images,
-            category,
-            quantity,
-        } = req.body;
+        const { name, slug, description, price, images, category, quantity } =
+            req.body;
 
-        console.log(req.body);
         if (!images || !Array.isArray(images) || images.length === 0) {
             return res
                 .status(400)
@@ -85,7 +81,6 @@ export const createProduct = async (req, res) => {
             images: uploadedImages,
             category,
             quantity,
-            isFeatured,
         });
 
         res.status(200).json({
@@ -205,6 +200,91 @@ export const toggleFeaturedProduct = async (req, res) => {
         console.log(
             `[ERROR]: Error toggling featured product: ${error.message}`
         );
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const updateProduct = async (req, res) => {
+    try {
+        const { name, slug, description, price, images, category, quantity } =
+            req.body;
+        const productId = req.params.id;
+
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({
+                message: "Không tìm thấy sản phẩm",
+            });
+        }
+
+        // Handle image uploads if new images are provided
+        let uploadedImages = product.images;
+        if (images && Array.isArray(images) && images.length > 0) {
+            uploadedImages = await Promise.all(
+                images.map(async (image) => {
+                    // If the image is already a URL, keep it
+                    if (image.startsWith("http")) {
+                        return image;
+                    }
+                    // Otherwise upload new image
+                    try {
+                        const result = await cloudinary.uploader.upload(image, {
+                            folder: "Products",
+                        });
+                        return result.secure_url;
+                    } catch (error) {
+                        console.error(
+                            `[ERROR]: Error uploading image to Cloudinary: ${error.message}`
+                        );
+                        throw error;
+                    }
+                })
+            );
+        }
+
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            {
+                name,
+                slug,
+                description,
+                price,
+                images: uploadedImages,
+                category,
+                quantity,
+            },
+            { new: true }
+        );
+
+        if (updatedProduct.isFeatured) {
+            await updateFeaturedProductsCache();
+        }
+
+        res.json({
+            message: "Cập nhật sản phẩm thành công",
+            product: updatedProduct,
+        });
+    } catch (error) {
+        console.log(`[ERROR]: Error updating product: ${error.message}`);
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const getProductById = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({
+                message: "Không tìm thấy sản phẩm nào",
+            });
+        }
+        res.json(product);
+    } catch (error) {
+        console.log(`[ERROR]: Error getting product by id: ${error.message}`);
         res.status(500).json({
             message: error.message,
         });
