@@ -11,7 +11,7 @@ import { Button } from "../ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-
+import axios from "@/lib/axios";
 interface Coupon {
     _id: string;
     code: string;
@@ -25,6 +25,11 @@ interface Coupon {
 
 const CouponTable = ({ data }: { data: Coupon[] }) => {
     const router = useRouter();
+
+    const handleDelete = async (id: string) => {
+        const response = await axios.delete(`/coupons/${id}`);
+        console.log(response);
+    };
 
     return (
         <Table>
@@ -90,7 +95,11 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
                                 >
                                     <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button variant="destructive" size="icon">
+                                <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    onClick={() => handleDelete(coupon._id)}
+                                >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </TableCell>

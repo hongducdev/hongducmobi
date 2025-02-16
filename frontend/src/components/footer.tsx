@@ -5,21 +5,21 @@ import { Input } from "./ui/input";
 
 const Footer = () => {
     return (
-        <footer>
+        <footer className="border-t border-gray-200 mt-10">
             <div className="max-w-7xl mx-auto py-10 grid grid-cols-3 gap-10">
                 <div className="">
                     <h5 className="text-xl font-semibold mb-4">Hỗ trợ</h5>
-                    <ul className="space-y-2">
+                    <ul className="space-y-4">
                         <li className="flex items-center gap-2">
-                            <MapPinned />
+                            <MapPinned className="text-blue-500" />
                             <span>Xã Quyết Thắng, Thành phố Thái Nguyên</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <Phone />
+                            <Phone className="text-blue-500" />
                             <span>0909090909</span>
                         </li>
                         <li className="flex items-center gap-2">
-                            <Mail />
+                            <Mail className="text-blue-500" />
                             <span>hongduc@gmail.com</span>
                         </li>
                     </ul>

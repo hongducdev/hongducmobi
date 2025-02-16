@@ -30,8 +30,10 @@ export const createCoupon = async (req, res) => {
 export const getCoupons = async (req, res) => {
     try {
         const coupons = await Coupon.find({
-            userId: req.user._id,
-        });
+            isActive: true,
+            startDate: { $lte: new Date() },
+            expirationDate: { $gte: new Date() },
+        }).sort({ createdAt: -1 });
 
         res.json(coupons);
     } catch (error) {

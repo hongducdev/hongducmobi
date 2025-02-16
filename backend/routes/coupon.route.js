@@ -11,7 +11,7 @@ import {
 
 const router = express.Router();
 
-router.get("/", protect, getCoupons);
+router.get("/", getCoupons);
 router.get("/:id", protect, getCoupon);
 router.post("/", protect, admin, createCoupon);
 router.get("/validate", protect, validateCoupon);
