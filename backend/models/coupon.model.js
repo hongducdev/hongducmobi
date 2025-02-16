@@ -13,9 +13,21 @@ const couponSchema = new mongoose.Schema(
             min: 0,
             max: 100,
         },
+        startDate: {
+            type: Date,
+            required: true,
+        },
         expirationDate: {
             type: Date,
             required: true,
+        },
+        maxUses: {
+            type: Number,
+            required: true,
+        },
+        currentUses: {
+            type: Number,
+            default: 0,
         },
         isActive: {
             type: Boolean,

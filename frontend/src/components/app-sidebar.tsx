@@ -13,7 +13,8 @@ import {
     SquareTerminal,
     LogOut,
     Package,
-    User
+    User,
+    Tag
 } from "lucide-react";
 
 import {
@@ -97,9 +98,20 @@ const items = {
                     title: "Danh sách người dùng",
                     url: "/admin/users",
                 },
+            ],
+        },
+        {
+            title: "Mã giảm giá",
+            url: "#",
+            icon: Tag,
+            items: [
                 {
-                    title: "Get Started",
-                    url: "#",
+                    title: "Danh sách mã giảm giá",
+                    url: "/admin/coupons",
+                },
+                {
+                    title: "Tạo mã giảm giá",
+                    url: "/admin/coupons/new",
                 },
             ],
         },
