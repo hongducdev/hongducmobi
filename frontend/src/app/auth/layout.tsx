@@ -1,5 +1,5 @@
 "use client";
-import { useUserStore } from "@/app/stores/useUserStore";
+import { useUserStore } from "@/stores/useUserStore";
 import { useEffect } from "react";
 import Loading from "../loading";
 import { Button } from "@/components/ui/button";

@@ -10,7 +10,7 @@ import {
     sendTokenForgotPassword,
     resetPassword,
 } from "../controllers/auth.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { admin, protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -22,6 +22,6 @@ router.post("/logout", logout);
 router.post("/refresh-token", refreshToken);
 router.post("/forgot-password", sendTokenForgotPassword);
 router.post("/reset-password", resetPassword);
-router.get("/profile", protectRoute, getProfile);
+router.get("/profile", protect, getProfile);
 
 export default router;

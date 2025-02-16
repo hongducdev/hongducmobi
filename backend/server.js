@@ -9,6 +9,7 @@ import productRoutes from "./routes/product.route.js";
 import cartRoutes from "./routes/cart.route.js";
 import couponRoutes from "./routes/coupon.route.js";
 import analyticsRoutes from "./routes/analytics.route.js";
+import userRoutes from "./routes/user.route.js";
 
 // connectDB
 import { connectDB } from "./lib/db.js";
@@ -38,6 +39,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupon", couponRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/users", userRoutes);
 
 app.listen(port, () => {
     console.log(`[SERVER]: Server running on port ${port}`);

@@ -47,15 +47,29 @@ const userSchema = new mongoose.Schema(
                 product: {
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "Product",
-                }
+                },
             },
             {
                 quantity: {
                     type: Number,
                     default: 1,
-                }
-            }
+                },
+            },
         ],
+        tokens: {
+            accessToken: {
+                type: String,
+                default: null,
+            },
+            refreshToken: {
+                type: String,
+                default: null,
+            },
+            refreshTokenExp: {
+                type: Date,
+                default: null,
+            },
+        },
     },
     {
         timestamps: true,
@@ -80,20 +94,19 @@ userSchema.methods.comparePassword = async function (password) {
 userSchema.methods.generateToken = async function () {
     const token = Math.floor(100000 + Math.random() * 900000).toString();
 
-
     this.token = token;
     this.tokenExp = Date.now() + 30 * 60 * 1000;
     await this.save();
 
     return token;
-}
+};
 
 userSchema.methods.verifyToken = async function (token) {
     if (this.tokenExp < Date.now()) {
         throw new Error("Token đã hết hạn");
     }
 
-    const isMatch = await token === this.token;
+    const isMatch = (await token) === this.token;
     if (!isMatch) {
         return false;
     }
@@ -104,7 +117,7 @@ userSchema.methods.verifyToken = async function (token) {
     await this.save();
 
     return true;
-}
+};
 
 const User = mongoose.model("User", userSchema);
 

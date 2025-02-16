@@ -1,7 +1,6 @@
 import { sendEmail } from "../lib/nodemailer.js";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { redis } from "../lib/redis.js";
 import bcrypt from "bcryptjs";
 
 const generateTokens = async (userId) => {
@@ -13,7 +12,7 @@ const generateTokens = async (userId) => {
         { userId },
         process.env.REFRESH_TOKEN_SECRET,
         {
-            expiresIn: "30d",
+            expiresIn: "7d",
         }
     );
 
@@ -138,13 +137,14 @@ export const resendToken = async (req, res) => {
     }
 };
 
-const storeRefreshToken = async (userId, refreshToken) => {
-    await redis.set(
-        `refresh_token:${userId}`,
-        refreshToken,
-        "EX",
-        7 * 60 * 60 * 24
-    );
+const storeTokens = async (userId, accessToken, refreshToken) => {
+    await User.findByIdAndUpdate(userId, {
+        tokens: {
+            accessToken,
+            refreshToken,
+            refreshTokenExp: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        },
+    });
 };
 
 const setCookies = (res, accessToken, refreshToken) => {
@@ -169,27 +169,25 @@ export const login = async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({
-                message: "Không tìm thấy người dùng!",
+                message: "Không tìm thấy người dùng!",
             });
         } else {
             const isMatch = await user.comparePassword(password);
             if (!isMatch) {
                 return res.status(400).json({
-                    message: "Mật khẩu không đúng!",
+                    message: "Mật khẩu không đúng!",
                 });
             }
-            // check user verified
             if (!user.isVerified) {
                 return res.status(400).json({
                     message: "Vui lòng xác minh tài khoản!",
                 });
             }
 
-            // auth
             const { refreshToken, accessToken } = await generateTokens(
                 user._id
             );
-            await storeRefreshToken(user._id, refreshToken);
+            await storeTokens(user._id, accessToken, refreshToken);
 
             setCookies(res, accessToken, refreshToken);
 
@@ -198,6 +196,7 @@ export const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                isVerified: user.isVerified,
             });
         }
     } catch (error) {
@@ -216,12 +215,18 @@ export const logout = async (req, res) => {
                 refreshToken,
                 process.env.REFRESH_TOKEN_SECRET
             );
-            await redis.del(`refresh_token:${decoded.userId}`);
+            await User.findByIdAndUpdate(decoded.userId, {
+                tokens: {
+                    accessToken: null,
+                    refreshToken: null,
+                    refreshTokenExp: null,
+                },
+            });
         }
         res.clearCookie("refreshToken");
         res.clearCookie("accessToken");
         res.status(200).json({
-            message: "Đã đăng xuất thành công!",
+            message: "Đã đăng xuất thành công!",
         });
     } catch (error) {
         console.log(`[ERROR]: Error logging out user: ${error.message}`);
@@ -244,9 +249,13 @@ export const refreshToken = async (req, res) => {
             refreshToken,
             process.env.REFRESH_TOKEN_SECRET
         );
-        const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
 
-        if (!storedToken || storedToken !== refreshToken) {
+        const user = await User.findById(decoded.userId);
+        if (
+            !user ||
+            user.tokens.refreshToken !== refreshToken ||
+            user.tokens.refreshTokenExp < new Date()
+        ) {
             return res.status(401).json({
                 message: "Vui lòng đăng nhập lại!",
             });
@@ -260,6 +269,10 @@ export const refreshToken = async (req, res) => {
             }
         );
 
+        await User.findByIdAndUpdate(decoded.userId, {
+            "tokens.accessToken": accessToken,
+        });
+
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -268,7 +281,7 @@ export const refreshToken = async (req, res) => {
         });
 
         res.json({
-            messsage: "Đã tạo mới accessToken thành công!",
+            message: "Đã tạo mới accessToken thành công!",
         });
     } catch (error) {
         console.log(`[ERROR]: Error refreshing token: ${error.message}`);
@@ -280,7 +293,15 @@ export const refreshToken = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     try {
-        res.json(req.user);
+        // Đảm bảo trả về đầy đủ thông tin user bao gồm role
+        const user = {
+            _id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            isVerified: req.user.isVerified,
+        };
+        res.json(user);
     } catch (error) {
         console.log(`[ERROR]: Error getting profile: ${error.message}`);
         res.status(500).json({ message: "Server error", error: error.message });
@@ -291,7 +312,7 @@ export const sendTokenForgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
-        
+
         if (!user) {
             return res.status(404).json({ message: "Email không tìm thấy" });
         }
@@ -315,7 +336,6 @@ export const sendTokenForgotPassword = async (req, res) => {
         );
 
         res.json({ message: "Vui lòng kiểm tra email để khôi phục mật khẩu" });
-
     } catch (error) {
         console.log(`[ERROR]: Error forgot password: ${error.message}`);
         res.status(500).json({ message: "Server error", error: error.message });

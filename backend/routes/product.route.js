@@ -10,7 +10,7 @@ import {
     toggleFeaturedProduct,
     updateProduct,
 } from "../controllers/product.controller.js";
-import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
+import { admin, protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -18,10 +18,10 @@ router.get("/", getAllProducts);
 router.get("/featured", getFeaturedProducts);
 router.get("/category/:category", getProductsByCategory);
 router.get("/recommendations", getRecommendedProducts);
-router.post("/create", protectRoute, adminRoute, createProduct);
-router.patch("/:id", protectRoute, adminRoute, toggleFeaturedProduct);
-router.delete("/:id", protectRoute, adminRoute, deleteProduct);
-router.put("/:id", protectRoute, adminRoute, updateProduct);
+router.post("/create", protect, admin, createProduct);
+router.patch("/:id", protect, admin, toggleFeaturedProduct);
+router.delete("/:id", protect, admin, deleteProduct);
+router.put("/:id", protect, admin, updateProduct);
 router.get("/:id", getProductById);
 
 export default router;

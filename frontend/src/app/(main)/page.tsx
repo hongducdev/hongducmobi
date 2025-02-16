@@ -1,9 +1,12 @@
-import React from 'react'
+import { Users } from "lucide-react";
+import HeaderSection from "@/components/header-section";
 
-const page = () => {
-  return (
-    <div>page</div>
-  )
-}
+const HomePage = () => {
+    return (
+        <div>
+            <HeaderSection icon={<Users />} title="Đánh giá" subTitle="Đánh giá của khách hàng" />
+        </div>
+    );
+};
 
-export default page
+export default HomePage;

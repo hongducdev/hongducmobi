@@ -8,6 +8,7 @@ interface UserStore {
     checkAuth: () => Promise<void>;
     refreshToken: () => Promise<any>;
     logout: () => Promise<void>;
+    setupAutoRefresh: () => void;
 }
 
 export const useUserStore = create<UserStore>((set, get) => ({
@@ -31,6 +32,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
         try {
             const response = await axios.get("/auth/profile");
             set({ user: response.data, checkingAuth: false });
+            get().setupAutoRefresh();
         } catch (error: any) {
             console.log(error.message);
             set({ checkingAuth: false, user: null });
@@ -49,6 +51,26 @@ export const useUserStore = create<UserStore>((set, get) => ({
             set({ user: null, checkingAuth: false });
             throw error;
         }
+    },
+
+    setupAutoRefresh: () => {
+        const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút (refresh trước khi token hết hạn 1 phút)
+        
+        const refresh = async () => {
+            try {
+                if (get().user) {
+                    await get().refreshToken();
+                }
+            } catch (error) {
+                console.error('Auto refresh token failed:', error);
+            }
+        };
+
+        // Thiết lập interval để tự động refresh
+        const intervalId = setInterval(refresh, REFRESH_INTERVAL);
+        
+        // Cleanup khi unmount
+        return () => clearInterval(intervalId);
     },
 }));
 

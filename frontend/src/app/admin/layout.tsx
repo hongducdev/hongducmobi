@@ -1,7 +1,7 @@
 "use client";
 import AppSidebar from "@/components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useUserStore } from "../stores/useUserStore";
+import { useUserStore } from "../../stores/useUserStore";
 import { useEffect } from "react";
 import { notFound } from "next/navigation";
 import Loading from "../loading";

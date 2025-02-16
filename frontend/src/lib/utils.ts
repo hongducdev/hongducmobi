@@ -15,3 +15,7 @@ export function formatCurrency(number: number) {
 export function formatNumber(number: number) {
     return new Intl.NumberFormat("vi-VN").format(number);
 }
+
+export function getInitialsName(name: string) {
+    return name.split(" ").slice(0, 2).map((n) => n[0]).join("");
+}
