@@ -1,5 +1,25 @@
 import Coupon from "../models/coupon.model.js";
 
+export const createCoupon = async (req, res) => {
+    try {
+        const { code, discountPercentage, expirationDate } = req.body;
+        const coupon = await Coupon.create({
+            code,
+            discountPercentage,
+            expirationDate,
+            userId: req.user._id,
+        });
+
+        res.status(201).json({
+            message: "Tạo mã giảm giá thành công!",
+            coupon,
+        });
+    } catch (error) {
+        console.log(`[ERROR]: Error creating coupon: ${error.message}`);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
 export const getCoupon = async (req, res) => {
     try {
         const coupon = await Coupon.findOne({
