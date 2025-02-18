@@ -1,3 +1,5 @@
+"use client";
+
 import { formatCurrency } from "@/lib/utils";
 import { Product } from "@/types/product";
 import Image from "next/image";

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import axios from "@/lib/axios";
-import router from "next/router";
+import router from "next/navigation";
 interface UserStore {
     user: any | null;
     checkingAuth: boolean;
@@ -21,7 +21,6 @@ export const useUserStore = create<UserStore>((set, get) => ({
         try {
             await axios.post("/auth/logout");
             set({ user: null });
-            router.push("/auth");
         } catch (error: any) {
             console.log(error.message);
         }

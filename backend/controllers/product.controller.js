@@ -4,9 +4,21 @@ import Product from "../models/product.model.js";
 
 export const getAllProducts = async (req, res) => {
     try {
-        const products = await Product.find({
-            isDeleted: false,
-        });
+        const { search } = req.query;
+        let query = { isDeleted: false };
+
+        if (search) {
+            query = {
+                ...query,
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } },
+                    { category: { $regex: search, $options: 'i' } }
+                ]
+            };
+        }
+
+        const products = await Product.find(query);
         res.json(products);
     } catch (error) {
         console.log(`[ERROR]: Error getting all products: ${error.message}`);
@@ -288,5 +300,54 @@ export const getProductById = async (req, res) => {
         res.status(500).json({
             message: error.message,
         });
+    }
+};
+
+export const getProductBySlug = async (req, res) => {
+    try {
+        const product = await Product.findOne({
+            slug: req.params.slug,
+            isDeleted: false,
+        });
+
+        if (!product) {
+            return res.status(404).json({
+                message: "Không tìm thấy sản phẩm",
+            });
+        }
+        res.json(product);
+    } catch (error) {
+        console.log(`[ERROR]: Error getting product by slug: ${error.message}`);
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const getProduct = async (req, res) => {
+    try {
+        const product = await Product.findOne({
+            slug: req.params.slug,
+            isDeleted: false,
+        });
+
+        if (!product) {
+            return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+        }
+
+        res.json(product);
+    } catch (error) {
+        console.log(`[ERROR]: Error getting product: ${error.message}`);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const getCategories = async (req, res) => {
+    try {
+        const categories = await Product.distinct("category");
+        res.json(categories);
+    } catch (error) {
+        console.log(`[ERROR]: Error getting categories: ${error.message}`);
+        res.status(500).json({ message: error.message });
     }
 };
