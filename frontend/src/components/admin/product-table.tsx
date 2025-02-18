@@ -31,7 +31,7 @@ const ProductTable = ({ data }: { data: any[] }) => {
                     <TableRow key={index}>
                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{item.name}</TableCell>
-                        <TableCell className="max-w-[600px]">
+                        <TableCell className="max-w-[600px] line-clamp-4">
                             {item.description}
                         </TableCell>
                         <TableCell>{formatNumber(item.quantity)}</TableCell>

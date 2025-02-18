@@ -1,51 +1,58 @@
 import Product from "../models/product.model.js";
+import User from "../models/user.model.js";
 
 export const getCartProducts = async (req, res) => {
     try {
-        const products = await Product.find({
-            _id: { $in: req.user.cartItems },
-            isDeleted: { $ne: true },
+        const user = await User.findById(req.user._id).populate({
+            path: "cartItems.product",
+            match: { isDeleted: { $ne: true } },
         });
 
-        const cartItems = products.map((product) => {
-            const item = req.user.cartItems.find(
-                (cartItem) => cartItem.id === product._id
-            );
-            return { ...product.toJSON(), quantity: item.quantity };
-        });
+        const cartItems = user.cartItems
+            .filter((item) => item.product) // Lọc bỏ các item có product là null
+            .map((item) => ({
+                product: item.product,
+                quantity: item.quantity,
+            }));
 
         res.json(cartItems);
     } catch (error) {
         console.log(`[ERROR]: Error getting cart products: ${error.message}`);
-        res.status(500).json({
-            message: error.message,
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
 export const addToCart = async (req, res) => {
     try {
         const { productId } = req.body;
-        const user = req.user;
+        const user = await User.findById(req.user._id);
 
-        const existingItem = user.cartItems.find(
-            (item) => item.id === productId
+        // Kiểm tra sản phẩm tồn tại
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+        }
+
+        const existingItemIndex = user.cartItems.findIndex(
+            (item) => item.product?.toString() === productId
         );
 
-        if (existingItem) {
-            existingItem.quantity += 1;
+        if (existingItemIndex > -1) {
+            // Nếu sản phẩm đã có trong giỏ hàng, tăng số lượng
+            user.cartItems[existingItemIndex].quantity += 1;
         } else {
-            user.cartItems.push({ id: productId, quantity: 1 });
+            // Nếu chưa có, thêm mới vào giỏ hàng
+            user.cartItems.push({
+                product: productId,
+                quantity: 1,
+            });
         }
 
         await user.save();
-
-        res.status(200).json(user.cartItems);
+        res.status(200).json({ message: "Thêm vào giỏ hàng thành công" });
     } catch (error) {
         console.log(`[ERROR]: Error adding to cart: ${error.message}`);
-        res.status(500).json({
-            message: error.message,
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -72,32 +79,50 @@ export const removeAllFromCart = async (req, res) => {
     }
 };
 
+export const removeFromCart = async (req, res) => {
+    try {
+        const { productId } = req.body;
+        const user = req.user;
+        user.cartItems = user.cartItems.filter(
+            (item) => item.product?.toString() !== productId
+        );
+        await user.save();
+        res.status(200).json({ message: "Đã xóa sản phẩm khỏi giỏ hàng" });
+    } catch (error) {
+        console.log(`[ERROR]: Error removing from cart: ${error.message}`);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const updateQuantity = async (req, res) => {
     try {
         const { id: productId } = req.params;
         const { quantity } = req.body;
-        const user = req.user;
+        const user = await User.findById(req.user._id);
 
-        const existingItem = user.cartItems.find(
-            (item) => item.id === productId
+        const existingItemIndex = user.cartItems.findIndex(
+            (item) => item.product?.toString() === productId
         );
 
-        if (existingItem) {
+        if (existingItemIndex > -1) {
             if (quantity === 0) {
                 user.cartItems = user.cartItems.filter(
-                    (item) => item.id !== productId
+                    (item) => item.product?.toString() !== productId
                 );
-                await user.save();
-                return res.status(200).json(user.cartItems);
+            } else {
+                user.cartItems[existingItemIndex].quantity = quantity;
             }
-
-            existingItem.quantity = quantity;
             await user.save();
-            return res.status(200).json(user.cartItems);
+            return res
+                .status(200)
+                .json({ message: "Cập nhật số lượng thành công" });
         } else {
             return res.status(404).json({
-                message: "Không tìm thấy sản phẩm nào",
+                message: "Không tìm thấy sản phẩm trong giỏ hàng",
             });
         }
-    } catch (error) {}
+    } catch (error) {
+        console.log(`[ERROR]: Error updating quantity: ${error.message}`);
+        res.status(500).json({ message: error.message });
+    }
 };
