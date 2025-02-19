@@ -372,8 +372,63 @@ export const resetPassword = async (req, res) => {
         res.status(200).json({
             message: "Mật khẩu đã được cập nhật thành công",
         });
+
+        await sendEmail(
+            user.email,
+            "Mật khẩu đã được cập nhật thành công",
+            `
+            `
+        );
     } catch (error) {
         console.error(`[ERROR]: Error resetting password: ${error.message}`);
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: "Không tìm thấy người dùng",
+            });
+        }
+
+        const isPasswordValid = await user.comparePassword(currentPassword);
+        if (!isPasswordValid) {
+            return res.status(400).json({
+                message: "Mật khẩu hiện tại không đúng",
+            });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({
+            message: "Đổi mật khẩu thành công",
+        });
+
+
+        await sendEmail(
+            user.email,
+            "Mật khẩu đã được cập nhật thành công",
+            `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h1 style="color: #333; margin-bottom: 20px;">Đổi mật khẩu thành công</h1>
+                        <p style="color: #666; font-size: 16px; line-height: 1.5;">Mật khẩu của bạn đã được cập nhật thành công.</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                            Nếu bạn không thực hiện yêu cầu này, vui lòng liên hệ với chúng tôi.
+                        </p>
+                    </div>
+                </div>
+            `
+        );
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
     }
 };
