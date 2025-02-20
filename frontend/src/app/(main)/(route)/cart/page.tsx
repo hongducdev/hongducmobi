@@ -7,8 +7,11 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Loading from "@/app/loading";
+import { useRouter } from "next/navigation";
 
 const CartPage = () => {
+    const router = useRouter();
     const { items, isLoading, fetchCartItems, updateQuantity, removeItem } =
         useCartStore();
 
@@ -22,11 +25,7 @@ const CartPage = () => {
     );
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-        );
+        return <Loading />;
     }
 
     if (items.length === 0) {
@@ -125,7 +124,10 @@ const CartPage = () => {
                                 <span>{formatCurrency(totalPrice)}</span>
                             </div>
                         </div>
-                        <Button className="w-full mt-4">
+                        <Button
+                            className="w-full mt-4"
+                            onClick={() => router.push("/checkout")}
+                        >
                             Tiến hành thanh toán
                         </Button>
                     </div>

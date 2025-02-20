@@ -15,20 +15,35 @@ interface CartStore {
     isLoading: boolean;
     addItem: (product: Product) => Promise<void>;
     removeItem: (productId: string) => Promise<void>;
+    removeAll: () => Promise<void>;
     updateQuantity: (productId: string, quantity: number) => Promise<void>;
-    clearCart: () => Promise<void>;
+    total: number;
     fetchCartItems: () => Promise<void>;
+    discount: number;
+    applyDiscount: (amount: number) => void;
 }
 
 export const useCartStore = create<CartStore>((set, get) => ({
     items: [],
     isLoading: false,
+    total: 0,
+    discount: 0,
 
     fetchCartItems: async () => {
         try {
             set({ isLoading: true });
             const response = await axios.get("/cart");
-            set({ items: response.data });
+            const items = response.data;
+            
+            // Tính tổng tiền
+            const total = items.reduce(
+                (sum: number, item: CartItem) => 
+                    sum + (item.product.price * item.quantity), 
+                0
+            );
+            
+            // Cập nhật cả items và total
+            set({ items, total });
         } catch (error: any) {
             toast({
                 title: "Lỗi khi tải giỏ hàng",
@@ -127,11 +142,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
         }
     },
 
-    clearCart: async () => {
+    removeAll: async () => {
         try {
             set({ isLoading: true });
             await axios.delete("/cart");
-            set({ items: [] });
+            set({ items: [], total: 0 });
             toast({
                 title: "Đã xóa giỏ hàng",
             });
@@ -143,5 +158,17 @@ export const useCartStore = create<CartStore>((set, get) => ({
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    setItems: (items: CartItem[]) => {
+        const total = items.reduce(
+            (sum, item) => sum + item.product.price * item.quantity,
+            0
+        );
+        set({ items, total });
+    },
+
+    applyDiscount: (amount: number) => {
+        set({ discount: amount });
     },
 }));

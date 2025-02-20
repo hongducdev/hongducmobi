@@ -30,3 +30,19 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
+
+export const updateAddress = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        user.address = req.body;
+        await user.save();
+        
+        res.json({
+            message: "Cập nhật địa chỉ thành công",
+            address: user.address
+        });
+    } catch (error) {
+        console.log(`[ERROR]: Error updating address: ${error.message}`);
+        res.status(500).json({ message: error.message });
+    }
+};

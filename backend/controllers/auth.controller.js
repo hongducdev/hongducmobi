@@ -293,12 +293,13 @@ export const refreshToken = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     try {
-        // Đảm bảo trả về đầy đủ thông tin user bao gồm role
         const user = {
             _id: req.user._id,
             name: req.user.name,
             email: req.user.email,
             role: req.user.role,
+            address: req.user.address,
+            phoneNumber: req.user.phoneNumber,
             isVerified: req.user.isVerified,
         };
         res.json(user);

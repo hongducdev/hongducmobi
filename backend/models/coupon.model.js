@@ -33,12 +33,12 @@ const couponSchema = new mongoose.Schema(
             type: Boolean,
             default: true,
         },
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: true,
-            unique: true,
-        },
+        usedBy: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     {
         timestamps: true,

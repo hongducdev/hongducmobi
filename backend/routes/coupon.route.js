@@ -14,7 +14,7 @@ const router = express.Router();
 router.get("/", getCoupons);
 router.get("/:id", protect, getCoupon);
 router.post("/", protect, admin, createCoupon);
-router.get("/validate", protect, validateCoupon);
+router.post("/validate", protect, validateCoupon);
 router.put("/:id", protect, admin, updateCoupon);
 router.delete("/:id", protect, admin, deleteCoupon);
 

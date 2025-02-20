@@ -14,7 +14,6 @@ export const createCoupon = async (req, res) => {
             startDate,
             expirationDate,
             maxUses,
-            userId: req.user._id,
         });
 
         res.status(201).json({
@@ -60,33 +59,48 @@ export const getCoupon = async (req, res) => {
 
 export const validateCoupon = async (req, res) => {
     try {
+        if (!req.body || !req.body.code) {
+            return res.status(400).json({
+                message: "Vui lòng cung cấp mã giảm giá",
+            });
+        }
+
         const { code } = req.body;
+        const userId = req.user._id;
+
         const coupon = await Coupon.findOne({
-            code: code,
-            userId: req.user._id,
+            code,
             isActive: true,
+            startDate: { $lte: new Date() },
+            expirationDate: { $gte: new Date() },
         });
 
         if (!coupon) {
-            return res
-                .status(404)
-                .json({ message: "Không tìm thấy mã giảm giá!" });
+            return res.status(404).json({
+                message: "Mã giảm giá không tồn tại hoặc đã hết hạn",
+            });
         }
 
-        if (coupon.expirationDate < new Date()) {
-            coupon.isActive = false;
-            await coupon.save();
-            return res.status(404).json({ message: "Mã giảm giá đã hết hạn!" });
+        if (coupon.usedBy.includes(userId)) {
+            return res.status(400).json({
+                message: "Bạn đã sử dụng mã giảm giá này",
+            });
+        }
+
+        if (coupon.currentUses >= coupon.maxUses) {
+            return res.status(400).json({
+                message: "Mã giảm giá đã hết lượt sử dụng",
+            });
         }
 
         res.json({
-            message: "Mã giảm giá hợp lệ!",
-            code: coupon.code,
+            message: "Mã giảm giá hợp lệ",
             discountPercentage: coupon.discountPercentage,
+            couponId: coupon._id,
         });
     } catch (error) {
         console.log(`[ERROR]: Error validating coupon: ${error.message}`);
-        res.status(500).json({ message: "Server error", error: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -124,5 +138,18 @@ export const deleteCoupon = async (req, res) => {
     } catch (error) {
         console.log(`[ERROR]: Error deleting coupon: ${error.message}`);
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const markCouponAsUsed = async (couponId, userId) => {
+    try {
+        const coupon = await Coupon.findById(couponId);
+        if (!coupon) return;
+
+        coupon.usedBy.push(userId);
+        coupon.currentUses += 1;
+        await coupon.save();
+    } catch (error) {
+        console.log(`[ERROR]: Error marking coupon as used: ${error.message}`);
     }
 };

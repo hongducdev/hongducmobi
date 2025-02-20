@@ -68,6 +68,12 @@ const userSchema = new mongoose.Schema(
                 default: null,
             },
         },
+        address: {
+            street: String,
+            city: String,
+            district: String,
+            ward: String,
+        },
     },
     {
         timestamps: true,

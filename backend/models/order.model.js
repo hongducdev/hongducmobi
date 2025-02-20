@@ -7,7 +7,7 @@ const orderSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
-        products: [
+        items: [
             {
                 product: {
                     type: mongoose.Schema.Types.ObjectId,
@@ -22,22 +22,54 @@ const orderSchema = new mongoose.Schema(
                 price: {
                     type: Number,
                     required: true,
-                    min: 0,
                 },
             },
         ],
         totalAmount: {
             type: Number,
             required: true,
-            min: 0,
         },
-        stripeSessionId: {
+        discount: {
+            type: Number,
+            default: 0,
+        },
+        status: {
+            type: String,
+            enum: ["pending", "paid", "failed", "delivered", "cancelled"],
+            default: "pending",
+        },
+        paymentMethod: {
+            type: String,
+            enum: ["cod", "vnpay"],
+            required: true,
+        },
+        paymentStatus: {
+            type: String,
+            enum: ["pending", "completed", "failed"],
+            default: "pending",
+        },
+        transactionId: {
             type: String,
             unique: true,
+            sparse: true,
+        },
+        vnpayResponse: {
+            type: Object,
+            default: null,
+        },
+        shippingAddress: {
+            street: String,
+            city: String,
+            district: String,
+            ward: String,
         },
     },
-    { timestamps: true }
+    {
+        timestamps: true,
+    }
 );
+
+orderSchema.index({ stripeSessionId: 1 }, { unique: true, sparse: true });
 
 const Order = mongoose.model("Order", orderSchema);
 

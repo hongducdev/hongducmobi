@@ -81,13 +81,26 @@ export const removeAllFromCart = async (req, res) => {
 
 export const removeFromCart = async (req, res) => {
     try {
-        const { productId } = req.body;
-        const user = req.user;
+        const { id } = req.params;
+        const user = await User.findById(req.user._id);
+        
+        // Lọc bỏ sản phẩm khỏi cartItems
         user.cartItems = user.cartItems.filter(
-            (item) => item.product?.toString() !== productId
+            (item) => item.product?.toString() !== id
         );
+        
         await user.save();
-        res.status(200).json({ message: "Đã xóa sản phẩm khỏi giỏ hàng" });
+        
+        // Trả về danh sách cartItems mới
+        const updatedCart = await User.findById(req.user._id).populate({
+            path: "cartItems.product",
+            match: { isDeleted: { $ne: true } },
+        });
+
+        res.status(200).json({
+            message: "Đã xóa sản phẩm khỏi giỏ hàng",
+            cartItems: updatedCart.cartItems
+        });
     } catch (error) {
         console.log(`[ERROR]: Error removing from cart: ${error.message}`);
         res.status(500).json({ message: error.message });
