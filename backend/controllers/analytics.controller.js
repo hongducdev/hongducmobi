@@ -88,22 +88,17 @@ function getDatesInRange(startDate, endDate) {
 
 export const getAnalytics = async (req, res) => {
     try {
-        // Tổng doanh thu
         const totalRevenue = await Order.aggregate([
             { $match: { status: "paid" } },
             { $group: { _id: null, total: { $sum: "$totalAmount" } } },
         ]);
 
-        // Tổng đơn hàng
         const totalOrders = await Order.countDocuments();
 
-        // Tổng người dùng
         const totalUsers = await User.countDocuments();
 
-        // Tổng sản phẩm
         const totalProducts = await Product.countDocuments();
 
-        // Doanh thu theo ngày (7 ngày gần nhất)
         const recentOrders = await Order.aggregate([
             {
                 $match: {
@@ -123,7 +118,6 @@ export const getAnalytics = async (req, res) => {
             { $project: { date: "$_id", total: 1, _id: 0 } },
         ]);
 
-        // Top sản phẩm bán chạy
         const topProducts = await Order.aggregate([
             { $unwind: "$items" },
             {

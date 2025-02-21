@@ -66,7 +66,6 @@ const LoginForm = ({
                 });
             }
 
-            // set user to store
             useUserStore.getState().setUser(response.data);
 
             router.push("/");

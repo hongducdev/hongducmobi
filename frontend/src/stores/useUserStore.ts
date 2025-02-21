@@ -56,7 +56,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
     },
 
     setupAutoRefresh: () => {
-        const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút (refresh trước khi token hết hạn 1 phút)
+        const REFRESH_INTERVAL = 14 * 60 * 1000;
 
         const refresh = async () => {
             try {
@@ -68,10 +68,8 @@ export const useUserStore = create<UserStore>((set, get) => ({
             }
         };
 
-        // Thiết lập interval để tự động refresh
         const intervalId = setInterval(refresh, REFRESH_INTERVAL);
 
-        // Cleanup khi unmount
         return () => clearInterval(intervalId);
     },
 

@@ -78,7 +78,7 @@ export default function OrdersPage() {
             await axios.patch(`/orders/${orderId}/status`, {
                 status: newStatus,
             });
-            fetchOrders(); // Refresh orders after update
+            fetchOrders();
         } catch (error) {
             console.error("Error updating order status:", error);
         }

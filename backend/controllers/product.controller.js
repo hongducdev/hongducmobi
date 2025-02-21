@@ -117,7 +117,6 @@ export const deleteProduct = async (req, res) => {
             });
         }
 
-        // change isDeleted to true
         product.isDeleted = true;
         await product.save();
 
@@ -231,16 +230,13 @@ export const updateProduct = async (req, res) => {
             });
         }
 
-        // Handle image uploads if new images are provided
         let uploadedImages = product.images;
         if (images && Array.isArray(images) && images.length > 0) {
             uploadedImages = await Promise.all(
                 images.map(async (image) => {
-                    // If the image is already a URL, keep it
                     if (image.startsWith("http")) {
                         return image;
                     }
-                    // Otherwise upload new image
                     try {
                         const result = await cloudinary.uploader.upload(image, {
                             folder: "Products",

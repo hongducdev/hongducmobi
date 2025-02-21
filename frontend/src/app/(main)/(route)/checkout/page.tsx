@@ -30,7 +30,6 @@ export default function CheckoutPage() {
 
     const handleCheckout = async () => {
         try {
-            // Kiểm tra địa chỉ giao hàng
             if (!user?.address) {
                 toast({
                     title: "Lỗi",
@@ -42,12 +41,10 @@ export default function CheckoutPage() {
 
             setIsLoading(true);
 
-            // Tính tổng tiền sau giảm giá
             const finalAmount = total - discount;
 
-            // Format dữ liệu theo yêu cầu của VNPay
             const orderData = {
-                amount: Math.round(finalAmount), // VNPay yêu cầu số nguyên
+                amount: Math.round(finalAmount),
                 orderDescription: `Thanh toan don hang ${new Date().getTime()}`,
                 orderType: "billpayment",
                 language: "vn",
@@ -126,7 +123,6 @@ export default function CheckoutPage() {
                 shippingAddress: user?.address,
             });
 
-            // Xóa giỏ hàng sau khi đặt hàng thành công
             removeAll();
 
             toast({

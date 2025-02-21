@@ -7,7 +7,6 @@ export const createOrder = async (req, res) => {
     try {
         const { amount, items, discount, paymentMethod, shippingAddress } = req.body;
 
-        // Tạo đơn hàng
         const order = await Order.create({
             user: req.user._id,
             items: items.map((item) => ({
@@ -22,12 +21,10 @@ export const createOrder = async (req, res) => {
             shippingAddress,
         });
 
-        // Thêm order vào user
         await User.findByIdAndUpdate(req.user._id, {
             $push: { orders: order._id },
         });
 
-        // Cập nhật số lượng và số lượng đã bán của sản phẩm
         for (const item of items) {
             await Product.findByIdAndUpdate(
                 item.productId,
@@ -105,7 +102,6 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
-// Lấy chi tiết đơn hàng cho admin
 export const getAdminOrderDetail = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
@@ -123,7 +119,6 @@ export const getAdminOrderDetail = async (req, res) => {
     }
 };
 
-// Lấy chi tiết đơn hàng cho user
 export const getUserOrderDetail = async (req, res) => {
     try {
         const order = await Order.findOne({

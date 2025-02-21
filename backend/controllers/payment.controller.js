@@ -13,14 +13,12 @@ export const createPaymentUrl = async (req, res) => {
         const { amount, items, discount, paymentMethod, shippingAddress } =
             req.body;
 
-        // Set múi giờ
         process.env.TZ = "Asia/Ho_Chi_Minh";
 
         let date = new Date();
         let createDate = moment(date).format("YYYYMMDDHHmmss");
         let orderId = moment(date).format("DDHHmmss");
 
-        // Tạo order với các trường cần thiết
         const order = await Order.create({
             user: req.user._id,
             items: items.map((item) => ({
@@ -36,12 +34,10 @@ export const createPaymentUrl = async (req, res) => {
             shippingAddress: shippingAddress || {},
         });
 
-        // Thêm order vào danh sách orders của user
         await User.findByIdAndUpdate(req.user._id, {
             $push: { orders: order._id },
         });
 
-        // Các config cho VNPay
         let ipAddr = req.headers["x-forwarded-for"] || 
             req.connection.remoteAddress ||
             req.socket.remoteAddress;
@@ -150,7 +146,6 @@ export const vnpayReturn = async (req, res) => {
 
                 const user = await User.findById(order.user);
 
-                // Tạo địa chỉ giao hàng an toàn
                 const shippingAddress = order.shippingAddress || {};
                 const fullAddress =
                     [
@@ -162,7 +157,6 @@ export const vnpayReturn = async (req, res) => {
                         .filter(Boolean)
                         .join(", ") || "Chưa cập nhật địa chỉ";
 
-                // Tạo danh sách sản phẩm
                 const itemsList = order.items
                     .map(
                         (item) => `

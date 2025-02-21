@@ -52,7 +52,6 @@ const Header = () => {
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
 
-            // Lọc và sắp xếp kết quả phù hợp nhất
             const filteredProducts = data
                 .filter(
                     (product: Product) =>
@@ -64,7 +63,6 @@ const Header = () => {
                             .includes(query.toLowerCase())
                 )
                 .sort((a: Product, b: Product) => {
-                    // Ưu tiên sản phẩm có tên chứa query
                     const aNameMatch = a.name
                         .toLowerCase()
                         .includes(query.toLowerCase());
@@ -75,7 +73,7 @@ const Header = () => {
                     if (!aNameMatch && bNameMatch) return 1;
                     return 0;
                 })
-                .slice(0, 5); // Giới hạn 5 kết quả
+                .slice(0, 5);
 
             setSuggestions(filteredProducts);
             setShowSuggestions(true);
@@ -86,7 +84,6 @@ const Header = () => {
         }
     };
 
-    // Thêm debounce để tránh gọi API quá nhiều
     const debouncedSearch = useCallback(
         debounce((query: string) => {
             searchProducts(query);

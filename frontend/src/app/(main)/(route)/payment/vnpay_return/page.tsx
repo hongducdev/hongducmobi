@@ -16,7 +16,6 @@ export default function VNPayReturn() {
     useEffect(() => {
         const verifyPayment = async () => {
             try {
-                // Lấy tất cả query params
                 const params = Object.fromEntries(searchParams.entries());
                 
                 const response = await axios.get("/payment/vnpay_return", {
@@ -25,7 +24,6 @@ export default function VNPayReturn() {
 
                 if (response.data.code === "00") {
                     setStatus("success");
-                    // Xóa giỏ hàng sau khi thanh toán thành công
                     removeAll();
                 } else {
                     setStatus("failed");

@@ -29,7 +29,6 @@ import {
 import Logo from "./logo";
 import NavMain from "./nav-main";
 
-// Menu items.
 const items = {
     user: {
         name: "shadcn",

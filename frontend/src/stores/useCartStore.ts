@@ -34,15 +34,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
             set({ isLoading: true });
             const response = await axios.get("/cart");
             const items = response.data;
-            
-            // Tính tổng tiền
+
             const total = items.reduce(
                 (sum: number, item: CartItem) => 
                     sum + (item.product.price * item.quantity), 
                 0
             );
             
-            // Cập nhật cả items và total
             set({ items, total });
         } catch (error: any) {
             toast({

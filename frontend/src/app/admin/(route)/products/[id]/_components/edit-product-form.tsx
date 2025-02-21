@@ -96,7 +96,6 @@ const EditProductForm = ({ initialData, productId }: EditProductFormProps) => {
         setIsLoading(true);
 
         try {
-            // Chỉ chuyển đổi những hình ảnh mới (không phải URL) sang base64
             const processedImages = await Promise.all(
                 values.images.map(async (image: string) => {
                     if (
@@ -107,7 +106,7 @@ const EditProductForm = ({ initialData, productId }: EditProductFormProps) => {
                         const blob = await response.blob();
                         return convertBlobToBase64(blob);
                     }
-                    return image; // Giữ nguyên URL của ảnh cũ
+                    return image;
                 })
             );
 

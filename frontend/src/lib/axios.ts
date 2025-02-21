@@ -8,7 +8,6 @@ const instance = axios.create({
     },
 });
 
-// Add interceptor để log request
 instance.interceptors.request.use(
     (config) => {
         return config;
@@ -18,7 +17,6 @@ instance.interceptors.request.use(
     }
 );
 
-// Add interceptor để log response
 instance.interceptors.response.use(
     (response) => {
         return response;

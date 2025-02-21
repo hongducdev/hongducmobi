@@ -9,7 +9,7 @@ export const getCartProducts = async (req, res) => {
         });
 
         const cartItems = user.cartItems
-            .filter((item) => item.product) // Lọc bỏ các item có product là null
+            .filter((item) => item.product)
             .map((item) => ({
                 product: item.product,
                 quantity: item.quantity,
@@ -27,7 +27,6 @@ export const addToCart = async (req, res) => {
         const { productId } = req.body;
         const user = await User.findById(req.user._id);
 
-        // Kiểm tra sản phẩm tồn tại
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
@@ -38,10 +37,8 @@ export const addToCart = async (req, res) => {
         );
 
         if (existingItemIndex > -1) {
-            // Nếu sản phẩm đã có trong giỏ hàng, tăng số lượng
             user.cartItems[existingItemIndex].quantity += 1;
         } else {
-            // Nếu chưa có, thêm mới vào giỏ hàng
             user.cartItems.push({
                 product: productId,
                 quantity: 1,
@@ -84,14 +81,12 @@ export const removeFromCart = async (req, res) => {
         const { id } = req.params;
         const user = await User.findById(req.user._id);
         
-        // Lọc bỏ sản phẩm khỏi cartItems
         user.cartItems = user.cartItems.filter(
             (item) => item.product?.toString() !== id
         );
         
         await user.save();
-        
-        // Trả về danh sách cartItems mới
+
         const updatedCart = await User.findById(req.user._id).populate({
             path: "cartItems.product",
             match: { isDeleted: { $ne: true } },
