@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import UserTable from "@/components/admin/user-table";
 import axios from "@/lib/axios";
+import { User } from "@/types/user";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
