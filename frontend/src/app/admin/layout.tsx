@@ -16,7 +16,7 @@ export default function AdminLayout({
 
     useEffect(() => {
         checkAuth();
-    }, []);
+    }, [checkAuth]);
 
     useEffect(() => {
         if (!checkingAuth && (!user || user.role !== "ADMIN")) {
@@ -35,11 +35,9 @@ export default function AdminLayout({
     if (!user || user.role !== "ADMIN") {
         return (
             <div className="h-screen flex items-center justify-center">
-                <h1 className="text-2xl font-bold">
-                    Không có quyền truy cập
-                </h1>
+                <h1 className="text-2xl font-bold">Không có quyền truy cập</h1>
             </div>
-        )
+        );
     }
 
     return (

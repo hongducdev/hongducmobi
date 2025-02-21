@@ -4,41 +4,42 @@ import React, { useEffect, useState } from "react";
 import UserTable from "@/components/admin/user-table";
 import axios from "@/lib/axios";
 
-const UserPage = async () => {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+export default function UsersPage() {
+    const [users, setUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await axios.get("/users");
+                setIsLoading(true);
+                const response = await axios.get("/users/admin");
                 setUsers(response.data);
             } catch (error) {
-                setError(error as Error);
+                setError("Error fetching users");
+                console.error(error);
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
+
         fetchUsers();
     }, []);
 
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Users</h1>
-            {loading ? (
+            {isLoading ? (
                 <div className="flex justify-center items-center h-screen">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
             ) : error ? (
                 <div className="flex justify-center items-center h-screen">
-                    <p className="text-red-500">Error: {error.message}</p>
+                    <p className="text-red-500">Error: {error}</p>
                 </div>
             ) : (
                 <UserTable data={users} />
             )}
         </div>
     );
-};
-
-export default UserPage;
+}
