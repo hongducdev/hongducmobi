@@ -1,28 +1,9 @@
 import express from "express";
 import { admin, protect } from "../middleware/auth.middleware.js";
-import {
-    getAnalyticsData,
-    getDailySalesData,
-} from "../controllers/analytics.controller.js";
+import { getAnalytics } from "../controllers/analytics.controller.js";
 
 const router = express.Router();
 
-router.get("/", protect, admin, async (req, res) => {
-    try {
-        const analyticsData = await getAnalyticsData();
+router.get("/", protect, admin, getAnalytics);
 
-        const endDate = new Date();
-        const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-        const dailySalesData = await getDailySalesData(startDate, endDate);
-
-        res.json({
-            analyticsData,
-            dailySalesData,
-        });
-    } catch (error) {
-        console.log(`[ERROR]: Error getting analytics data: ${error.message}`);
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
 export default router;

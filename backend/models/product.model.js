@@ -26,11 +26,12 @@ const productSchema = new mongoose.Schema(
         },
         quantity: {
             type: Number,
-            default: 0,
+            required: true,
+            default: 0
         },
         sold: {
             type: Number,
-            default: 0,
+            default: 0
         },
         category: {
             type: String,

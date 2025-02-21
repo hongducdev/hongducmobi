@@ -12,6 +12,7 @@ import couponRoutes from "./routes/coupon.route.js";
 import analyticsRoutes from "./routes/analytics.route.js";
 import userRoutes from "./routes/user.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import orderRoutes from "./routes/order.route.js";
 
 // connectDB
 import { connectDB } from "./lib/db.js";
@@ -53,6 +54,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.listen(port, () => {
     console.log(`[SERVER]: Server running on port ${port}`);

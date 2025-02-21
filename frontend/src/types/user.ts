@@ -2,10 +2,9 @@ export interface User {
     _id: string;
     name: string;
     email: string;
-    phoneNumber: string;
-    address: {
-        fullName: string;
-        phone: string;
+    phoneNumber?: string;
+    role: "USER" | "ADMIN";
+    address?: {
         street: string;
         city: string;
         district: string;

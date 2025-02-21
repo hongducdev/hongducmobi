@@ -3,10 +3,15 @@ import crypto from "crypto";
 import { vnpayConfig } from "../config/vnpay.js";
 import Order from "../models/order.model.js";
 import moment from "moment";
+import User from "../models/user.model.js";
+import { sendEmail } from "../lib/nodemailer.js";
+import { formatCurrency } from "../utils/format.js";
+import Product from "../models/product.model.js";
 
 export const createPaymentUrl = async (req, res) => {
     try {
-        const { amount, items, discount, paymentMethod } = req.body;
+        const { amount, items, discount, paymentMethod, shippingAddress } =
+            req.body;
 
         // Set múi giờ
         process.env.TZ = "Asia/Ho_Chi_Minh";
@@ -15,7 +20,7 @@ export const createPaymentUrl = async (req, res) => {
         let createDate = moment(date).format("YYYYMMDDHHmmss");
         let orderId = moment(date).format("DDHHmmss");
 
-        // Tạo order trước
+        // Tạo order với các trường cần thiết
         const order = await Order.create({
             user: req.user._id,
             items: items.map((item) => ({
@@ -27,14 +32,19 @@ export const createPaymentUrl = async (req, res) => {
             discount,
             paymentMethod,
             status: "pending",
-            transactionId: orderId, // Lưu orderId làm transactionId
+            transactionId: orderId,
+            shippingAddress: shippingAddress || {},
         });
 
-        let ipAddr =
-            req.headers["x-forwarded-for"] ||
+        // Thêm order vào danh sách orders của user
+        await User.findByIdAndUpdate(req.user._id, {
+            $push: { orders: order._id },
+        });
+
+        // Các config cho VNPay
+        let ipAddr = req.headers["x-forwarded-for"] || 
             req.connection.remoteAddress ||
-            req.socket.remoteAddress ||
-            req.connection.socket.remoteAddress;
+            req.socket.remoteAddress;
 
         let tmnCode = process.env.VNP_TMN_CODE;
         let secretKey = process.env.VNP_HASH_SECRET;
@@ -114,16 +124,122 @@ export const vnpayReturn = async (req, res) => {
 
         if (secureHash === signed) {
             const transactionId = vnp_Params["vnp_TxnRef"];
-            const rspCode = vnp_Params["vnp_ResponseCode"];
+            const responseCode = vnp_Params["vnp_ResponseCode"];
 
-            if (rspCode === "00") {
-                await Order.findOneAndUpdate(
+            if (responseCode === "00") {
+                const order = await Order.findOneAndUpdate(
                     { transactionId },
                     {
                         status: "paid",
                         paymentStatus: "completed",
                         vnpayResponse: vnp_Params,
                     }
+                ).populate("items.product");
+
+                for (const item of order.items) {
+                    await Product.findByIdAndUpdate(
+                        item.product._id,
+                        {
+                            $inc: {
+                                quantity: -item.quantity,
+                                sold: +item.quantity
+                            }
+                        }
+                    );
+                }
+
+                const user = await User.findById(order.user);
+
+                // Tạo địa chỉ giao hàng an toàn
+                const shippingAddress = order.shippingAddress || {};
+                const fullAddress =
+                    [
+                        shippingAddress.street,
+                        shippingAddress.ward,
+                        shippingAddress.district,
+                        shippingAddress.city,
+                    ]
+                        .filter(Boolean)
+                        .join(", ") || "Chưa cập nhật địa chỉ";
+
+                // Tạo danh sách sản phẩm
+                const itemsList = order.items
+                    .map(
+                        (item) => `
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                            <img src="${item.product.images[0]}" alt="${
+                            item.product.name
+                        }" style="width: 64px; height: 64px; object-fit: cover; border-radius: 4px;">
+                        </td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                            <h4 style="margin: 0; color: #333;">${
+                                item.product.name
+                            }</h4>
+                            <p style="margin: 4px 0 0; color: #666;">Số lượng: ${
+                                item.quantity
+                            }</p>
+                        </td>
+                        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">
+                            ${formatCurrency(item.price * item.quantity)}
+                        </td>
+                    </tr>
+                `
+                    )
+                    .join("");
+
+                const orderId = order._id.toString().slice(-8);
+
+                await sendEmail(
+                    user.email,
+                    "Đặt hàng thành công",
+                    `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <div style="text-align: center; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                            <h1 style="color: #28a745; margin-bottom: 10px;">Đặt hàng thành công!</h1>
+                            <p style="color: #666;">Cảm ơn bạn đã mua hàng tại cửa hàng của chúng tôi</p>
+                        </div>
+
+                        <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h2 style="color: #333; margin-bottom: 20px;">Thông tin đơn hàng #${orderId}</h2>
+                            
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa;">
+                                        <th style="padding: 12px; text-align: left;">Sản phẩm</th>
+                                        <th style="padding: 12px; text-align: left;">Chi tiết</th>
+                                        <th style="padding: 12px; text-align: right;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${itemsList}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold;">Tổng tiền:</td>
+                                        <td style="padding: 12px; text-align: right; font-weight: bold; color: #28a745;">
+                                            ${formatCurrency(order.totalAmount)}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h3 style="color: #333; margin-bottom: 15px;">Thông tin giao hàng</h3>
+                            <p style="margin: 5px 0; color: #666;">Người nhận: ${
+                                user.name
+                            }</p>
+                            <p style="margin: 5px 0; color: #666;">Địa chỉ: ${fullAddress}</p>
+                            <p style="margin: 5px 0; color: #666;">Số điện thoại: ${
+                                user.phoneNumber || "Chưa cập nhật"
+                            }</p>
+                        </div>
+
+                        <div style="margin-top: 30px; text-align: center; color: #666; font-size: 14px;">
+                            <p>Email này được gửi tự động, vui lòng không trả lời.</p>
+                            <p>Nếu bạn cần hỗ trợ, vui lòng liên hệ với chúng tôi qua email hoặc hotline.</p>
+                        </div>
+                    </div>`
                 );
 
                 res.json({

@@ -11,14 +11,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import axios from "@/lib/axios";
 import { toast } from "@/hooks/use-toast";
+import { useUserStore } from "@/stores/useUserStore";
 
 export default function CheckoutPage() {
-    const { items, total, discount, applyDiscount } = useCartStore();
+    const { items, total, discount, applyDiscount, removeAll } = useCartStore();
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
     const [promoCode, setPromoCode] = useState("");
     const [isApplying, setIsApplying] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState("cod");
+    const { user } = useUserStore();
 
     useEffect(() => {
         if (items.length === 0) {
@@ -28,6 +30,16 @@ export default function CheckoutPage() {
 
     const handleCheckout = async () => {
         try {
+            // Kiểm tra địa chỉ giao hàng
+            if (!user?.address) {
+                toast({
+                    title: "Lỗi",
+                    description: "Vui lòng cập nhật địa chỉ giao hàng",
+                    variant: "destructive",
+                });
+                return;
+            }
+
             setIsLoading(true);
 
             // Tính tổng tiền sau giảm giá
@@ -47,6 +59,7 @@ export default function CheckoutPage() {
                 })),
                 discount,
                 paymentMethod,
+                shippingAddress: user.address,
             };
 
             const response = await axios.post(
@@ -98,9 +111,40 @@ export default function CheckoutPage() {
         }
     };
 
-    const handleCodCheckout = () => {
-        // Xử lý đơn hàng COD
-        console.log("Xử lý đơn hàng COD");
+    const handleCodCheckout = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axios.post("/orders/create", {
+                amount: total - discount,
+                items: items.map((item) => ({
+                    productId: item.product._id,
+                    quantity: item.quantity,
+                    price: item.product.price,
+                })),
+                discount,
+                paymentMethod: "cod",
+                shippingAddress: user?.address,
+            });
+
+            // Xóa giỏ hàng sau khi đặt hàng thành công
+            removeAll();
+
+            toast({
+                title: "Thành công",
+                description: "Đặt hàng thành công",
+            });
+
+            router.push("/account/orders");
+        } catch (error: any) {
+            toast({
+                title: "Lỗi",
+                description:
+                    error.response?.data?.message || "Đặt hàng thất bại",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const finalTotal = total - discount;

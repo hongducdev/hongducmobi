@@ -69,8 +69,6 @@ const orderSchema = new mongoose.Schema(
     }
 );
 
-orderSchema.index({ stripeSessionId: 1 }, { unique: true, sparse: true });
-
 const Order = mongoose.model("Order", orderSchema);
 
 export default Order;

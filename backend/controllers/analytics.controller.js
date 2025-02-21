@@ -85,3 +85,83 @@ function getDatesInRange(startDate, endDate) {
 
     return dates;
 }
+
+export const getAnalytics = async (req, res) => {
+    try {
+        // Tổng doanh thu
+        const totalRevenue = await Order.aggregate([
+            { $match: { status: "paid" } },
+            { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+        ]);
+
+        // Tổng đơn hàng
+        const totalOrders = await Order.countDocuments();
+
+        // Tổng người dùng
+        const totalUsers = await User.countDocuments();
+
+        // Tổng sản phẩm
+        const totalProducts = await Product.countDocuments();
+
+        // Doanh thu theo ngày (7 ngày gần nhất)
+        const recentOrders = await Order.aggregate([
+            {
+                $match: {
+                    status: "paid",
+                    createdAt: {
+                        $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    total: { $sum: "$totalAmount" },
+                },
+            },
+            { $sort: { _id: 1 } },
+            { $project: { date: "$_id", total: 1, _id: 0 } },
+        ]);
+
+        // Top sản phẩm bán chạy
+        const topProducts = await Order.aggregate([
+            { $unwind: "$items" },
+            {
+                $group: {
+                    _id: "$items.product",
+                    total: { $sum: "$items.quantity" },
+                },
+            },
+            { $sort: { total: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            { $unwind: "$product" },
+            {
+                $project: {
+                    name: "$product.name",
+                    total: 1,
+                    _id: 0,
+                },
+            },
+        ]);
+
+        res.json({
+            totalRevenue: totalRevenue[0]?.total || 0,
+            totalOrders,
+            totalUsers,
+            totalProducts,
+            recentOrders,
+            topProducts,
+        });
+    } catch (error) {
+        console.error("Error getting analytics:", error);
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -24,8 +24,9 @@ export const useUserStore = create<UserStore>((set, get) => ({
         try {
             await axios.post("/auth/logout");
             set({ user: null });
-        } catch (error: any) {
-            console.log(error.message);
+        } catch (error) {
+            console.error("Error logging out:", error);
+            throw error;
         }
     },
 
