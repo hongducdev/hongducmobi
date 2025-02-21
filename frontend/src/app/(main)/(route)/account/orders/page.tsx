@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
+import Image from "next/image";
 
 interface OrderItem {
     product: {
@@ -21,11 +22,20 @@ interface OrderItem {
     price: number;
 }
 
+type OrderStatus = "pending" | "paid" | "delivered" | "cancelled";
+
+const statusMap: Record<OrderStatus, { label: string; color: string }> = {
+    pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
+    paid: { label: "Đã thanh toán", color: "bg-green-500" },
+    delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
+    cancelled: { label: "Đã hủy", color: "bg-red-500" },
+};
+
 interface Order {
     _id: string;
     items: OrderItem[];
     totalAmount: number;
-    status: string;
+    status: OrderStatus;
     paymentMethod: string;
     paymentStatus: string;
     createdAt: string;
@@ -36,13 +46,6 @@ interface Order {
         ward: string;
     };
 }
-
-const statusMap = {
-    pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
-    paid: { label: "Đã thanh toán", color: "bg-green-500" },
-    delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
-    cancelled: { label: "Đã hủy", color: "bg-red-500" },
-};
 
 const OrdersPage = () => {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -106,16 +109,15 @@ const OrdersPage = () => {
                                     Đơn hàng #{order._id.slice(-8)}
                                 </h3>
                                 <p className="text-sm text-gray-500">
-                                    {new Date(order.createdAt).toLocaleDateString(
-                                        "vi-VN",
-                                        {
-                                            year: "numeric",
-                                            month: "long",
-                                            day: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        }
-                                    )}
+                                    {new Date(
+                                        order.createdAt
+                                    ).toLocaleDateString("vi-VN", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                    })}
                                 </p>
                             </div>
                             <Badge className={statusMap[order.status].color}>
@@ -130,10 +132,12 @@ const OrdersPage = () => {
                                     className="flex justify-between items-center"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <img
+                                        <Image
                                             src={item.product.images[0]}
                                             alt={item.product.name}
-                                            className="w-16 h-16 object-cover rounded"
+                                            width={64}
+                                            height={64}
+                                            className="object-cover rounded"
                                         />
                                         <div>
                                             <p className="font-medium">
@@ -146,7 +150,9 @@ const OrdersPage = () => {
                                         </div>
                                     </div>
                                     <p className="font-medium">
-                                        {formatCurrency(item.price * item.quantity)}
+                                        {formatCurrency(
+                                            item.price * item.quantity
+                                        )}
                                     </p>
                                 </div>
                             ))}
