@@ -69,7 +69,9 @@ const ProductPage = async ({ params }: { params: { slug: string } }) => {
                     </p>
 
                     <div className="flex items-center gap-2">
-                        <p className="text-gray-500">Kho hàng: {product.quantity}</p>
+                        <p className="text-gray-500">
+                            Kho hàng: {product.quantity}
+                        </p>
                     </div>
                     <ChangeNumber product={product} />
                 </div>

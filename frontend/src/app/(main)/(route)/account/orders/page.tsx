@@ -56,7 +56,6 @@ const OrdersPage = () => {
             try {
                 setIsLoading(true);
                 const response = await axios.get("/orders");
-                console.log("Orders response:", response.data);
                 setOrders(response.data);
             } catch (error: any) {
                 console.error("Error fetching orders:", error);

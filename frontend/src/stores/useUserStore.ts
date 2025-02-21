@@ -37,7 +37,6 @@ export const useUserStore = create<UserStore>((set, get) => ({
             set({ user: response.data, checkingAuth: false });
             get().setupAutoRefresh();
         } catch (error: any) {
-            console.log(error.message);
             set({ checkingAuth: false, user: null });
         }
     },

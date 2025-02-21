@@ -28,7 +28,6 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
 
     const handleDelete = async (id: string) => {
         const response = await axios.delete(`/coupons/${id}`);
-        console.log(response);
     };
 
     return (
