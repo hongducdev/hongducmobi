@@ -5,7 +5,23 @@ import axios from "@/lib/axios";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-const statusMap = {
+type OrderStatus = 'pending' | 'paid' | 'delivered' | 'cancelled';
+
+interface Order {
+    _id: string;
+    items: OrderItem[];
+    totalAmount: number;
+    status: OrderStatus;
+    shippingAddress: {
+        street: string;
+        city: string;
+        district: string;
+        ward: string;
+    };
+    createdAt: string;
+}
+
+const statusMap: Record<OrderStatus, { label: string; color: string }> = {
     pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
     paid: { label: "Đã thanh toán", color: "bg-green-500" },
     delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
@@ -13,7 +29,7 @@ const statusMap = {
 };
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
-    const [order, setOrder] = useState<any>(null);
+    const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
