@@ -5,7 +5,18 @@ import axios from "@/lib/axios";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
-type OrderStatus = 'pending' | 'paid' | 'delivered' | 'cancelled';
+interface OrderItem {
+    product: {
+        _id: string;
+        name: string;
+        price: number;
+        images: string[];
+    };
+    quantity: number;
+    price: number;
+}
+
+type OrderStatus = "pending" | "paid" | "delivered" | "cancelled";
 
 interface Order {
     _id: string;
@@ -28,7 +39,11 @@ const statusMap: Record<OrderStatus, { label: string; color: string }> = {
     cancelled: { label: "Đã hủy", color: "bg-red-500" },
 };
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default function OrderDetailPage({
+    params,
+}: {
+    params: { id: string };
+}) {
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -58,7 +73,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     return (
         <div className="max-w-4xl mx-auto p-6">
             <h1 className="text-2xl font-bold mb-6">Chi tiết đơn hàng</h1>
-            
+
             <div className="bg-white rounded-lg shadow p-6">
                 <div className="mb-6">
                     <h2 className="font-semibold mb-2">Trạng thái đơn hàng</h2>
@@ -71,7 +86,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     <h2 className="font-semibold mb-2">Địa chỉ giao hàng</h2>
                     <p>{order.shippingAddress.street}</p>
                     <p>
-                        {order.shippingAddress.ward}, {order.shippingAddress.district}
+                        {order.shippingAddress.ward},{" "}
+                        {order.shippingAddress.district}
                     </p>
                     <p>{order.shippingAddress.city}</p>
                 </div>
@@ -82,10 +98,18 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                         <table className="w-full">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-4 py-2 text-left">Sản phẩm</th>
-                                    <th className="px-4 py-2 text-right">Giá</th>
-                                    <th className="px-4 py-2 text-right">Số lượng</th>
-                                    <th className="px-4 py-2 text-right">Tổng</th>
+                                    <th className="px-4 py-2 text-left">
+                                        Sản phẩm
+                                    </th>
+                                    <th className="px-4 py-2 text-right">
+                                        Giá
+                                    </th>
+                                    <th className="px-4 py-2 text-right">
+                                        Số lượng
+                                    </th>
+                                    <th className="px-4 py-2 text-right">
+                                        Tổng
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -101,14 +125,19 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                                             {item.quantity}
                                         </td>
                                         <td className="px-4 py-2 text-right">
-                                            {formatCurrency(item.price * item.quantity)}
+                                            {formatCurrency(
+                                                item.price * item.quantity
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                             <tfoot className="bg-gray-50">
                                 <tr className="border-t">
-                                    <td colSpan={3} className="px-4 py-2 font-semibold">
+                                    <td
+                                        colSpan={3}
+                                        className="px-4 py-2 font-semibold"
+                                    >
                                         Tổng tiền
                                     </td>
                                     <td className="px-4 py-2 text-right font-semibold">
@@ -122,4 +151,4 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             </div>
         </div>
     );
-} 
+}
