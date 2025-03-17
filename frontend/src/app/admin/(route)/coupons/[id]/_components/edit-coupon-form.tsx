@@ -54,8 +54,8 @@ const EditCouponForm = ({ initialData }: EditCouponFormProps) => {
             code: initialData.code,
             discountPercentage: initialData.discountPercentage.toString(),
             maxUses: initialData.maxUses.toString(),
-            startDate: new Date(initialData.startDate),
-            expirationDate: new Date(initialData.expirationDate),
+            startDate: initialData.startDate ? new Date(initialData.startDate) : new Date(),
+            expirationDate: initialData.expirationDate ? new Date(initialData.expirationDate) : new Date(),
         },
     });
 
