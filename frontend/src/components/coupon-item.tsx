@@ -24,23 +24,23 @@ const CouponItem = ({ coupon }: { coupon: Coupon }) => {
                     </Button>
                 </div>
                 <div className="">
-                    {new Date() < new Date(coupon.startDate) ? (
+                    {coupon.startDate && new Date() < new Date(coupon.startDate) ? (
                         <div className="flex flex-col gap-2">
                             <p>Bắt đầu vào: </p>
                             <TimeCountdown
                                 startDate={new Date()}
-                                endDate={coupon.startDate}
+                                endDate={new Date(coupon.startDate)}
                             />
                         </div>
-                    ) : (
+                    ) : coupon.expirationDate ? (
                         <div className="flex flex-col gap-2">
                             <p>Kết thúc vào: </p>
                             <TimeCountdown
                                 startDate={new Date()}
-                                endDate={coupon.expirationDate}
+                                endDate={new Date(coupon.expirationDate)}
                             />
                         </div>
-                    )}
+                    ) : null}
                 </div>
             </div>
         </div>
