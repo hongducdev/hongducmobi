@@ -14,18 +14,7 @@ import { format } from "date-fns";
 import axios from "@/lib/axios";
 import DeleteConfirm from "@/components/delete-confirm";
 import { useToast } from "@/hooks/use-toast";
-
-
-interface Coupon {
-    _id: string;
-    code: string;
-    discountPercentage: number;
-    maxUses: number;
-    currentUses: number;
-    startDate: Date;
-    expirationDate: Date;
-    isActive: boolean;
-}
+import { Coupon } from "@/types/coupon";
 
 const CouponTable = ({ data }: { data: Coupon[] }) => {
     const router = useRouter();
@@ -73,16 +62,16 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
                                 {coupon.currentUses}/{coupon.maxUses}
                             </TableCell>
                             <TableCell>
-                                {format(
+                                {coupon.startDate ? format(
                                     new Date(coupon.startDate),
                                     "dd/MM/yyyy"
-                                )}
+                                ) : "N/A"}
                             </TableCell>
                             <TableCell>
-                                {format(
+                                {coupon.expirationDate ? format(
                                     new Date(coupon.expirationDate),
                                     "dd/MM/yyyy"
-                                )}
+                                ) : "N/A"}
                             </TableCell>
                             <TableCell>
                                 <span
