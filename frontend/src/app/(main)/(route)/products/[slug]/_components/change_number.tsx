@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Product } from "@/types/product";
 import { useCartStore } from "@/stores/useCartStore";
 import { useRouter } from "next/navigation";
+import { useUserStore } from "@/stores/useUserStore";
 
 interface ChangeNumberProps {
     product: Product;
@@ -16,6 +17,9 @@ const ChangeNumber = ({ product }: ChangeNumberProps) => {
     const [quantity, setQuantity] = useState(1);
     const { addItem } = useCartStore();
     const router = useRouter();
+    const { user } = useUserStore();
+
+    const isAdmin = user?.role === "ADMIN";
 
     const incrementQuantity = () => {
         if (quantity < product.quantity) {
@@ -46,6 +50,10 @@ const ChangeNumber = ({ product }: ChangeNumberProps) => {
         await addItem(product);
         router.push("/checkout");
     };
+
+    if (isAdmin) {
+        return null;
+    }
 
     return (
         <div className="space-y-4">

@@ -3,7 +3,7 @@ import NewCouponForm from "./_components/new-coupon-form";
 
 const page = () => {
     return (
-        <div>
+        <div className="p-4">
             <h1 className="font-semibold text-2xl">Tạo mã giảm giá</h1>
             <div className="mt-4">
                 <NewCouponForm />

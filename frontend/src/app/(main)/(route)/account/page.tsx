@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { User, Package, Lock, CreditCard, MapPin, Heart } from "lucide-react";
+import { User, Package, Lock, CreditCard, Heart } from "lucide-react";
 import { useUserStore } from "@/stores/useUserStore";
 
 const sidebarItems = [
@@ -26,11 +26,6 @@ const sidebarItems = [
         title: "Phương thức thanh toán",
         href: "/account/payment-methods",
         icon: CreditCard,
-    },
-    {
-        title: "Sổ địa chỉ",
-        href: "/account/addresses",
-        icon: MapPin,
     },
     {
         title: "Sản phẩm yêu thích",

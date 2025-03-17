@@ -8,10 +8,14 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "../ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import axios from "@/lib/axios";
+import DeleteConfirm from "@/components/delete-confirm";
+import { useToast } from "@/hooks/use-toast";
+
+
 interface Coupon {
     _id: string;
     code: string;
@@ -25,9 +29,21 @@ interface Coupon {
 
 const CouponTable = ({ data }: { data: Coupon[] }) => {
     const router = useRouter();
+    const { toast } = useToast();
 
     const handleDelete = async (id: string) => {
-        const response = await axios.delete(`/coupons/${id}`);
+        try {
+            await axios.delete(`/coupons/${id}`);
+            toast({
+                title: "Xóa mã giảm giá thành công",
+            });
+            router.refresh();
+        } catch (error) {
+            console.error("Error deleting coupon:", error);
+            toast({
+                title: "Có lỗi xảy ra khi xóa mã giảm giá",
+            });
+        }
     };
 
     return (
@@ -41,7 +57,7 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
                     <TableHead>Ngày bắt đầu</TableHead>
                     <TableHead>Ngày kết thúc</TableHead>
                     <TableHead>Trạng thái</TableHead>
-                    <TableHead>Thao tác</TableHead>
+                    <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -81,11 +97,10 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
                                         : "Hết hạn"}
                                 </span>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="space-x-2 text-right">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="mr-2"
                                     onClick={() =>
                                         router.push(
                                             `/admin/coupons/${coupon._id}`
@@ -94,13 +109,11 @@ const CouponTable = ({ data }: { data: Coupon[] }) => {
                                 >
                                     <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    onClick={() => handleDelete(coupon._id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <DeleteConfirm
+                                    onDelete={() => handleDelete(coupon._id)}
+                                    title="Xóa mã giảm giá?"
+                                    description={`Bạn chắc chắn muốn xóa mã giảm giá "${coupon.code}"? Hành động này không thể hoàn tác.`}
+                                />
                             </TableCell>
                         </TableRow>
                     ))

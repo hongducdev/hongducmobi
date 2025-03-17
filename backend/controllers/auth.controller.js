@@ -378,6 +378,16 @@ export const resetPassword = async (req, res) => {
             user.email,
             "Mật khẩu đã được cập nhật thành công",
             `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
+                    <div style="text-align: center; padding: 20px;">
+                        <h1 style="color: #333; margin-bottom: 20px;">Đổi mật khẩu thành công</h1>
+                        <p style="color: #666; font-size: 16px; line-height: 1.5;">Mật khẩu của bạn đã được cập nhật thành công.</p>
+                    </div>
+                </div>
+                <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                    Nếu bạn không thực hiện yêu cầu này, vui lòng liên hệ với chúng tôi.
+                </p>
+            </div>
             `
         );
     } catch (error) {

@@ -24,6 +24,13 @@ export const getCartProducts = async (req, res) => {
 
 export const addToCart = async (req, res) => {
     try {
+        // Kiểm tra role của user
+        if (req.user.role === "admin") {
+            return res.status(403).json({
+                message: "Admin không thể thêm sản phẩm vào giỏ hàng"
+            });
+        }
+
         const { productId } = req.body;
         const user = await User.findById(req.user._id);
 
@@ -48,7 +55,7 @@ export const addToCart = async (req, res) => {
         await user.save();
         res.status(200).json({ message: "Thêm vào giỏ hàng thành công" });
     } catch (error) {
-        console.log(`[ERROR]: Error adding to cart: ${error.message}`);
+        console.error("Error adding to cart:", error);
         res.status(500).json({ message: error.message });
     }
 };

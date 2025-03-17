@@ -22,6 +22,20 @@ import InputFile from "@/components/input-file";
 import axios from "@/lib/axios";
 import { toast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
     name: z.string().min(2, {
@@ -47,6 +61,8 @@ const formSchema = z.object({
 
 const CreateProductForm = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [open, setOpen] = useState(false);
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -74,6 +90,27 @@ const CreateProductForm = () => {
             setValue("slug", newSlug, { shouldValidate: true });
         }
     }, [name, setValue]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get("/products/categories");
+                if (Array.isArray(response.data)) {
+                    setCategories(response.data);
+                } else {
+                    console.error(
+                        "API did not return an array:",
+                        response.data
+                    );
+                    setCategories([]);
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+                setCategories([]);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const convertBlobToBase64 = (file: File | Blob): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -217,9 +254,39 @@ const CreateProductForm = () => {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Danh mục</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
+                            <div className="flex gap-2">
+                                <FormControl>
+                                    <Input
+                                        placeholder="Nhập danh mục"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                {categories.length > 0 && (
+                                    <select
+                                        className="border rounded px-3 py-2"
+                                        onChange={(e) => {
+                                            if (e.target.value) {
+                                                field.onChange(e.target.value);
+                                            }
+                                        }}
+                                    >
+                                        <option value="">
+                                            Chọn danh mục có sẵn
+                                        </option>
+                                        {categories.map((category) => (
+                                            <option
+                                                key={category}
+                                                value={category}
+                                            >
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+                            <FormDescription>
+                                Nhập danh mục mới hoặc chọn từ danh sách có sẵn
+                            </FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}

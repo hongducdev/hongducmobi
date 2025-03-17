@@ -22,13 +22,19 @@ interface OrderItem {
     price: number;
 }
 
-type OrderStatus = "pending" | "paid" | "delivered" | "cancelled";
+type OrderStatus =
+    | "pending"
+    | "paid"
+    | "delivered"
+    | "cancelled"
+    | "delivering";
 
 const statusMap: Record<OrderStatus, { label: string; color: string }> = {
     pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
     paid: { label: "Đã thanh toán", color: "bg-green-500" },
     delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
     cancelled: { label: "Đã hủy", color: "bg-red-500" },
+    delivering: { label: "Đang giao hàng", color: "bg-purple-500" },
 };
 
 interface Order {

@@ -17,5 +17,17 @@ export function formatNumber(number: number) {
 }
 
 export function getInitialsName(name: string) {
-    return name.split(" ").slice(0, 2).map((n) => n[0]).join("");
+    return name
+        .split(" ")
+        .slice(0, 2)
+        .map((n) => n[0])
+        .join("");
+}
+
+export function formatDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
 }

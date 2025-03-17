@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChangeNumber from "./_components/change_number";
+import ProductCard from "@/components/product-card";
 
 async function getProduct(slug: string) {
     const res = await fetch(
@@ -24,6 +25,25 @@ async function getProduct(slug: string) {
 
     const product: Product = await res.json();
     return product;
+}
+
+async function getRelatedProducts(category: string, currentProductId: string) {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/products?category=${category}&limit=4`,
+        {
+            cache: "force-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    if (!res.ok) {
+        return [];
+    }
+
+    const products: Product[] = await res.json();
+    return products.filter((p) => p._id !== currentProductId).slice(0, 4);
 }
 
 export async function generateStaticParams() {
@@ -56,6 +76,11 @@ export async function generateMetadata({
 
 const ProductPage = async ({ params }: { params: { slug: string } }) => {
     const product = await getProduct(params.slug);
+    const relatedProducts = await getRelatedProducts(
+        product.category,
+        product._id
+    );
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -80,6 +105,22 @@ const ProductPage = async ({ params }: { params: { slug: string } }) => {
                 <h2 className="text-lg font-semibold mb-2">Mô tả sản phẩm</h2>
                 <p className="text-gray-600">{product.description}</p>
             </div>
+
+            {relatedProducts.length > 0 && (
+                <div className="mt-16">
+                    <h2 className="text-2xl font-bold mb-6">
+                        Sản phẩm tương tự
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {relatedProducts.map((relatedProduct) => (
+                            <ProductCard
+                                key={relatedProduct._id}
+                                product={relatedProduct}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

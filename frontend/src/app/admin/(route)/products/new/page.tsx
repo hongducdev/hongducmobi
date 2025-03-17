@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 const NewProductPage = () => {
     return (
-        <div>
+        <div className="p-4">
             <h1 className="font-semibold text-2xl">Tạo sản phẩm</h1>
             <div className="mt-4">
                 <CreateProductForm />

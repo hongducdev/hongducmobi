@@ -14,7 +14,7 @@ export default function UsersPage() {
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
-                const response = await axios.get("/users/admin");
+                const response = await axios.get("/users");
                 setUsers(response.data);
             } catch (error) {
                 setError("Error fetching users");

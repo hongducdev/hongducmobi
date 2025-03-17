@@ -13,7 +13,7 @@ import {
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import axios from "@/lib/axios";
 export default function ProductsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -25,11 +25,11 @@ export default function ProductsPage() {
         const fetchData = async () => {
             try {
                 const [productsRes, categoriesRes] = await Promise.all([
-                    fetch("/api/products"),
-                    fetch("/api/products/categories"),
+                    axios.get("/products"),
+                    axios.get("/products/categories"),
                 ]);
-                const productsData = await productsRes.json();
-                const categoriesData = await categoriesRes.json();
+                const productsData = productsRes.data;
+                const categoriesData = categoriesRes.data;
                 setProducts(productsData);
                 setCategories(categoriesData);
             } catch (error) {

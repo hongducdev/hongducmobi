@@ -70,10 +70,14 @@ const UserHeader = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => router.push("/account")}>
-                        <BadgeCheck />
-                        Tài khoản
-                    </DropdownMenuItem>
+                    {user?.role === "USER" && (
+                        <DropdownMenuItem
+                            onClick={() => router.push("/account")}
+                        >
+                            <BadgeCheck />
+                            Tài khoản
+                        </DropdownMenuItem>
+                    )}
                     {user?.role === "ADMIN" && (
                         <DropdownMenuItem onClick={() => router.push("/admin")}>
                             <UserCog />

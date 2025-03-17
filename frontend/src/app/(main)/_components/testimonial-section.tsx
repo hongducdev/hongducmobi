@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Carousel,
     CarouselContent,
@@ -6,10 +8,13 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel";
 import Testimonial from "@/components/testimonial";
+import AutoplayPlugin from "embla-carousel-autoplay";
+import { useRef } from "react";
 
 const testimonials = [
     {
         name: "Nguyễn Thanh Tùng",
+        role: "Khách hàng thân thiết",
         image: "https://avatar.iran.liara.run/public",
         rating: 5,
         comment:
@@ -17,6 +22,7 @@ const testimonials = [
     },
     {
         name: "Trần Thị Hương",
+        role: "Khách hàng mới",
         image: "https://avatar.iran.liara.run/public",
         rating: 4,
         comment:
@@ -24,6 +30,7 @@ const testimonials = [
     },
     {
         name: "Lê Minh Đức",
+        role: "Khách hàng VIP",
         image: "https://avatar.iran.liara.run/public",
         rating: 5,
         comment:
@@ -31,6 +38,7 @@ const testimonials = [
     },
     {
         name: "Phạm Thu Thảo",
+        role: "Khách hàng thường xuyên",
         image: "https://avatar.iran.liara.run/public",
         rating: 5,
         comment:
@@ -38,6 +46,7 @@ const testimonials = [
     },
     {
         name: "Hoàng Văn Nam",
+        role: "Khách hàng",
         image: "https://avatar.iran.liara.run/public",
         rating: 4,
         comment:
@@ -45,6 +54,7 @@ const testimonials = [
     },
     {
         name: "Vũ Thị Mai Anh",
+        role: "Khách hàng thân thiết",
         image: "https://avatar.iran.liara.run/public",
         rating: 5,
         comment:
@@ -53,18 +63,42 @@ const testimonials = [
 ];
 
 const TestimonialSection = () => {
+    const plugin = useRef(
+        AutoplayPlugin({
+            delay: 4000,
+            stopOnInteraction: true,
+            stopOnMouseEnter: true,
+        })
+    );
+
     return (
-        <Carousel opts={{ loop: true }}>
-            <CarouselContent>
-                {testimonials.map((testimonial) => (
-                    <CarouselItem key={testimonial.name} className="basis-1/3">
-                        <Testimonial {...testimonial} />
-                    </CarouselItem>
-                ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-        </Carousel>
+        <div className="relative py-4">
+            <Carousel
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                plugins={[plugin.current]}
+                className="w-full"
+            >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                    {testimonials.map((testimonial, index) => (
+                        <CarouselItem
+                            key={index}
+                            className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3"
+                        >
+                            <div className="h-full">
+                                <Testimonial {...testimonial} />
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <div className="hidden md:block">
+                    <CarouselPrevious className="absolute -left-12 top-1/2 -translate-y-1/2" />
+                    <CarouselNext className="absolute -right-12 top-1/2 -translate-y-1/2" />
+                </div>
+            </Carousel>
+        </div>
     );
 };
 
