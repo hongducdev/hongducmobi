@@ -35,6 +35,12 @@ const formSchema = z
         email: z.string().email({
             message: "Email không hợp lệ",
         }),
+        phoneNumber: z
+            .string()
+            .regex(/^(0)[35789][0-9]{8}$/, {
+                message: "Số điện thoại không hợp lệ",
+            })
+            .optional(),
         password: z.string().min(6, {
             message: "Mật khẩu phải có ít nhất 6 ký tự",
         }),
@@ -60,16 +66,18 @@ const RegisterForm = ({
             email: "",
             password: "",
             confirmPassword: "",
+            phoneNumber: "",
         },
     });
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsLoading(true);
         try {
-            const { name, email, password } = values;
+            const { name, email, password, phoneNumber } = values;
             const response = await axios.post("/auth/register", {
                 name,
                 email,
                 password,
+                phoneNumber,
             });
 
             if (response.status !== 200) {
@@ -82,7 +90,7 @@ const RegisterForm = ({
             toast({
                 title: "Đăng ký thành công!",
                 description: response.data.message,
-            })
+            });
             router.push(`/auth/verify?email=${email}`);
         } catch (error: any) {
             if (error.response) {
@@ -147,6 +155,22 @@ const RegisterForm = ({
                                         <FormControl>
                                             <Input
                                                 placeholder="email@example.com"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="phoneNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số điện thoại</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="0987654321"
                                                 {...field}
                                             />
                                         </FormControl>

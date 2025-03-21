@@ -20,7 +20,7 @@ const generateTokens = async (userId) => {
 };
 
 export const register = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phoneNumber } = req.body;
     try {
         const userExits = await User.findOne({ email });
         if (userExits) {
@@ -28,7 +28,7 @@ export const register = async (req, res) => {
                 message: "Nguời dùng đã tồn tại!",
             });
         } else {
-            const user = await User.create({ name, email, password });
+            const user = await User.create({ name, email, password, phoneNumber });
             if (user) {
                 const token = await user.generateToken();
                 await sendEmail(
