@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import { formatCurrency } from "@/lib/utils";
+import { Clock, CheckCircle2, Truck, XCircle, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface OrderItem {
@@ -15,8 +16,6 @@ interface OrderItem {
     quantity: number;
     price: number;
 }
-
-type OrderStatus = "pending" | "paid" | "delivered" | "cancelled";
 
 interface Order {
     _id: string;
@@ -32,11 +31,42 @@ interface Order {
     createdAt: string;
 }
 
-const statusMap: Record<OrderStatus, { label: string; color: string }> = {
-    pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
-    paid: { label: "Đã thanh toán", color: "bg-green-500" },
-    delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
-    cancelled: { label: "Đã hủy", color: "bg-red-500" },
+type OrderStatus =
+    | "pending"
+    | "paid"
+    | "delivered"
+    | "cancelled"
+    | "delivering";
+
+const statusMap: Record<
+    OrderStatus,
+    { label: string; color: string; icon: any }
+> = {
+    pending: {
+        label: "Chờ xử lý",
+        color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+        icon: Clock,
+    },
+    paid: {
+        label: "Đã thanh toán",
+        color: "bg-green-100 text-green-800 hover:bg-green-200",
+        icon: CheckCircle2,
+    },
+    delivered: {
+        label: "Đã giao hàng",
+        color: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+        icon: Package,
+    },
+    cancelled: {
+        label: "Đã hủy",
+        color: "bg-red-100 text-red-800 hover:bg-red-200",
+        icon: XCircle,
+    },
+    delivering: {
+        label: "Đang giao hàng",
+        color: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+        icon: Truck,
+    },
 };
 
 export default function OrderDetailPage({
@@ -77,8 +107,33 @@ export default function OrderDetailPage({
             <div className="bg-white rounded-lg shadow p-6">
                 <div className="mb-6">
                     <h2 className="font-semibold mb-2">Trạng thái đơn hàng</h2>
-                    <Badge className={statusMap[order.status].color}>
-                        {statusMap[order.status].label}
+                    <Badge
+                        className={
+                            statusMap[
+                                (order.status as OrderStatus) in
+                                statusMap
+                                    ? (order.status as OrderStatus)
+                                    : "pending"
+                            ].color
+                        }
+                    >
+                        {React.createElement(
+                            statusMap[
+                                (order.status as OrderStatus) in
+                                statusMap
+                                    ? (order.status as OrderStatus)
+                                    : "pending"
+                            ].icon,
+                            { className: "w-4 h-4 mr-2" }
+                        )}
+                        {
+                            statusMap[
+                                (order.status as OrderStatus) in
+                                statusMap
+                                    ? (order.status as OrderStatus)
+                                    : "pending"
+                            ].label
+                        }
                     </Badge>
                 </div>
 

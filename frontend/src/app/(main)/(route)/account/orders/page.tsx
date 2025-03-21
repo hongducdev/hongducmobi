@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Image from "next/image";
+import { Clock, CheckCircle2, Truck, XCircle, Package } from "lucide-react";
+import React from "react";
 
 interface OrderItem {
     product: {
@@ -29,12 +31,35 @@ type OrderStatus =
     | "cancelled"
     | "delivering";
 
-const statusMap: Record<OrderStatus, { label: string; color: string }> = {
-    pending: { label: "Chờ xử lý", color: "bg-yellow-500" },
-    paid: { label: "Đã thanh toán", color: "bg-green-500" },
-    delivered: { label: "Đã giao hàng", color: "bg-blue-500" },
-    cancelled: { label: "Đã hủy", color: "bg-red-500" },
-    delivering: { label: "Đang giao hàng", color: "bg-purple-500" },
+const statusMap: Record<
+    OrderStatus,
+    { label: string; color: string; icon: any }
+> = {
+    pending: {
+        label: "Chờ xử lý",
+        color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+        icon: Clock,
+    },
+    paid: {
+        label: "Đã thanh toán",
+        color: "bg-green-100 text-green-800 hover:bg-green-200",
+        icon: CheckCircle2,
+    },
+    delivered: {
+        label: "Đã giao hàng",
+        color: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+        icon: Package,
+    },
+    cancelled: {
+        label: "Đã hủy",
+        color: "bg-red-100 text-red-800 hover:bg-red-200",
+        icon: XCircle,
+    },
+    delivering: {
+        label: "Đang giao hàng",
+        color: "bg-purple-100 text-purple-800 hover:bg-purple-200",
+        icon: Truck,
+    },
 };
 
 interface Order {
@@ -125,8 +150,33 @@ const OrdersPage = () => {
                                     })}
                                 </p>
                             </div>
-                            <Badge className={statusMap[order.status].color}>
-                                {statusMap[order.status].label}
+                            <Badge
+                                className={
+                                    statusMap[
+                                        (order.status as OrderStatus) in
+                                        statusMap
+                                            ? (order.status as OrderStatus)
+                                            : "pending"
+                                    ].color
+                                }
+                            >
+                                {React.createElement(
+                                    statusMap[
+                                        (order.status as OrderStatus) in
+                                        statusMap
+                                            ? (order.status as OrderStatus)
+                                            : "pending"
+                                    ].icon,
+                                    { className: "w-4 h-4 mr-2" }
+                                )}
+                                {
+                                    statusMap[
+                                        (order.status as OrderStatus) in
+                                        statusMap
+                                            ? (order.status as OrderStatus)
+                                            : "pending"
+                                    ].label
+                                }
                             </Badge>
                         </div>
 
