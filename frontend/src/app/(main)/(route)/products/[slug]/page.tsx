@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import React from "react";
 import ImageProduct from "./_components/image_product";
 import { formatCurrency } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import ChangeNumber from "./_components/change_number";
 import ProductCard from "@/components/product-card";
 
