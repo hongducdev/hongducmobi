@@ -57,8 +57,8 @@ const CouponSection = () => {
             <Carousel opts={{ loop: true }}>
                 <CarouselContent>
                     {coupons.map((coupon) => (
-                        <CarouselItem key={coupon._id} className="basis-1/3">
-                            <div className="p-2 transform hover:scale-105 transition-transform">
+                        <CarouselItem key={coupon._id}>
+                            <div className="p-2 transform transition-transform">
                                 <CouponItem coupon={coupon} />
                             </div>
                         </CarouselItem>
